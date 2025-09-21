@@ -1,10 +1,4 @@
 import express from 'express';
-import {
-  //   selectPlan,
-  createCompanyAndAdmin,
-  //   createPayment,
-  //   verifyPayment,
-} from '../controllers/subscription.controller.js';
 
 const router = express.Router();
 
@@ -12,7 +6,7 @@ const router = express.Router();
 // router.post('/select-plan', selectPlan);
 
 // Step 2: Employer creates company + admin
-router.post('/create-company-payment', createCompanyAndAdmin);
+// router.post('/create-company-payment', createCompanyAndAdmin);
 
 // Step 3: Create Razorpay order (payment init)
 // router.post('/create-payment', createPayment);

@@ -5,7 +5,8 @@ const CompanySchema = new mongoose.Schema(
   {
     name: { type: String, required: true, index: true },
     industry: { type: String },
-    size: { type: String, enum: ['1-10', '11-50', '51-200', '201-1000', '1000+'], default: '1-10' },
+    // size: { type: String, enum: ['1-10', '11-50', '51-200', '201-1000', '1000+'], default: '1-10' },
+    size: { type: String },
     website: { type: String },
     logoUrl: { type: String },
     contactEmail: { type: String, required: true },

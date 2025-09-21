@@ -1,5 +1,8 @@
-src/readme.md
+readme.md
 node_modules
-src/.env
-src/.env.sample
+.env.sample
 Job potal document.docx
+index.html
+notes.txt
+.env.qa
+.env.prod

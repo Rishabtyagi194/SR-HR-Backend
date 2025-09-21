@@ -5,17 +5,18 @@ import bcrypt from 'bcrypt';
 const EmployerUserSchema = new mongoose.Schema(
   {
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployerUser' },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, index: true, lowercase: true },
     password: { type: String, required: true },
-    phone: { type: String },
+    phone: { type: String, unique: true },
     role: {
       type: String,
       enum: ['employer_admin', 'employer_staff'],
       default: 'employer_admin',
     },
 
-    permissions: [{ type: String, default: 'free' }], // e.g., ["post_jobs","manage_applications"]
+    permissions: [{ type: String, default: 'all' }], // e.g., ["post_jobs","manage_applications"]
 
     isActive: { type: Boolean, default: false },
     lastLogin: { type: Date },
