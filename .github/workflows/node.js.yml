@@ -27,7 +27,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=no rozgaruser@31.97.61.6 "
-            cd /var/www/prod &&
+            cd /var/www/prod/SR-HR-Backend &&
             git fetch origin main &&
             git reset --hard origin/main &&
             npm install &&
@@ -39,7 +39,7 @@ jobs:
         if: github.ref == 'refs/heads/qa'
         run: |
           ssh -o StrictHostKeyChecking=no rozgaruser@31.97.61.6 "
-            cd /var/www/qa &&
+            cd /var/www/qa/SR-HR-Backend &&
             git fetch origin qa &&
             git reset --hard origin/qa &&
             npm install &&
