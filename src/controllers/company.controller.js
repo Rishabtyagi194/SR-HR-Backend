@@ -44,15 +44,7 @@ export const createCompanyAndAdmin = async (req, res) => {
 // Get all companies
 export const getAllCompanies = async (req, res) => {
   try {
-    const {
-      isActive,
-      name,
-      adminUserId,
-      page = 1,
-      limit = 10,
-      sortBy = 'createdAt',
-      order = 'desc',
-    } = req.query;
+    const { isActive, name, adminUserId, page = 1, limit = 10, sortBy = 'createdAt', order = 'desc' } = req.query;
 
     const query = {};
 
@@ -79,12 +71,7 @@ export const getAllCompanies = async (req, res) => {
     const skip = (options.page - 1) * options.limit;
 
     const [companies, total] = await Promise.all([
-      companyModel
-        .find(query)
-        .populate(options.populate)
-        .sort(options.sort)
-        .skip(skip)
-        .limit(options.limit),
+      companyModel.find(query).populate(options.populate).sort(options.sort).skip(skip).limit(options.limit),
       companyModel.countDocuments(query),
     ]);
 

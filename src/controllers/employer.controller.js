@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { generateToken } from '../config/jwt.js';
 import employerUserModel from '../models/employerUser.model.js';
 
@@ -53,7 +54,7 @@ export const EmployerLogin = async (req, res) => {
     message: 'Login successful',
     token,
     employer: {
-      id: employer._id,
+      _id: employer._id,
       name: employer.name,
       email: employer.email,
       phone: employer.phone,
@@ -66,21 +67,67 @@ export const EmployerLogin = async (req, res) => {
   });
 };
 
-// Get all employer users
-export const getAllEmployers = async (req, res) => {
-  try {
-    const employers = await employerUserModel
-      .find()
-      .select('-password') // exclude password
-      .sort({ createdAt: -1 }); // latest first
+// ----------------- get all employer function is in admin controller
 
-    return res.status(200).json({
-      message: 'All employers fetched successfully',
-      totalEmployers: employers.length,
-      employers,
+// ----------------------- Employer Staff ------------------------------
+// create employer staff
+export const createEmployerStaff = async (req, res) => {
+  try {
+    const { name, email, password, phone, permissions, isActive } = req.body;
+
+    const user = req.user; // logged-in employer admin
+    console.log(user);
+
+    if (!user || !user.companyId || !user._id) {
+      return res.status(400).json({ msg: 'Invalid employer admin context' });
+    }
+
+    // Create employer staff
+    const employerStaff = await employerUserModel.create({
+      companyId: user.companyId, // Company linked to staff
+      adminId: user._id, // Employer admin who created the staff
+      name,
+      email,
+      password,
+      phone,
+      role: 'employer_staff',
+      permissions,
+      isActive: isActive ?? true, // default true if not provided
     });
-  } catch (err) {
-    console.error('getAllEmployers error:', err);
-    return res.status(500).json({ message: 'Server error', error: err.message });
+
+    res.status(201).json({
+      message: 'Employer staff created successfully',
+      employerStaff,
+    });
+  } catch (error) {
+    console.error('createEmployerStaff error:', error);
+    return res.status(500).json({ msg: 'Error creating staff', error: error.message });
+  }
+};
+
+// show employer staff to their admin only
+export const getAllEmployerStaff = async (req, res) => {
+  try {
+    let query = {};
+
+    if (req.user.role === 'employer_admin') {
+      query = {
+        companyId: new mongoose.Types.ObjectId(req.user.companyId),
+        role: 'employer_staff',
+        adminId: req.user._id,
+      };
+    } else {
+      query = { _id: req.user._id };
+    }
+
+    const users = await employerUserModel.find(query).select('-password');
+
+    res.status(200).json({
+      message: 'Employer staff fetched successfully',
+      totalStaff: users.length,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
