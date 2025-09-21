@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/company/register', createCompanyAndAdmin);
 
 // list all registered companies
-router.get('/companies', Authenticate, getAllCompanies); // only super Admin can see
+router.get('/companies', Authenticate, getAllCompanies); // only super Admin can see all registered companies
 
 // GET /admin/companies/:id — company detail + subscription + payments
 // router.get('/admin/companies/:id', () => {});
