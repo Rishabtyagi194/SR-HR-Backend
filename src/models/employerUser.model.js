@@ -7,7 +7,7 @@ const EmployerUserSchema = new mongoose.Schema(
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
     adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployerUser' },
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, index: true, lowercase: true },
+    email: { type: String, unique: true, index: true, lowercase: true },
     password: { type: String, required: true },
     phone: { type: String, unique: true },
     role: {

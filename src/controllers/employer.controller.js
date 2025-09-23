@@ -131,3 +131,65 @@ export const getAllEmployerStaff = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// Update employer staff
+export const updateEmployerStaff = async (req, res) => {
+  try {
+    const { staffId } = req.params;
+    const { name, email, phone, permissions, isActive } = req.body;
+
+    let query = { _id: staffId, role: 'employer_staff' };
+
+    // If employer_admin, restrict to their company + created staff
+    if (req.user.role === 'employer_admin') {
+      query.companyId = new mongoose.Types.ObjectId(req.user.companyId);
+      query.adminId = req.user._id;
+    }
+
+    const updatedStaff = await employerUserModel.findOneAndUpdate(
+      query,
+      { $set: { name, email, phone, permissions, isActive } },
+      { new: true, runValidators: true, select: '-password' },
+    );
+
+    if (!updatedStaff) {
+      return res.status(404).json({ message: 'Staff not found or not authorized' });
+    }
+
+    res.status(200).json({
+      message: 'Employer staff updated successfully',
+      updatedStaff,
+    });
+  } catch (error) {
+    console.error('updateEmployerStaff error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Delete employer staff
+export const deleteEmployerStaff = async (req, res) => {
+  try {
+    const { staffId } = req.params;
+
+    let query = { _id: staffId, role: 'employer_staff' };
+
+    if (req.user.role === 'employer_admin') {
+      query.companyId = new mongoose.Types.ObjectId(req.user.companyId);
+      query.adminId = req.user._id;
+    }
+
+    const deletedStaff = await employerUserModel.findOneAndDelete(query);
+
+    if (!deletedStaff) {
+      return res.status(404).json({ message: 'Staff not found or not authorized' });
+    }
+
+    res.status(200).json({
+      message: 'Employer staff deleted successfully',
+      deletedStaff,
+    });
+  } catch (error) {
+    console.error('deleteEmployerStaff error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
