@@ -6,7 +6,7 @@ import companyRoutes from './routes/company.routes.js';
 import subscriptionPaymentRoutes from './routes/subscriptionPayment.routes.js';
 // import BuySubScriptionRoutes from './routes/subscription.routes.js';
 import employerRoute from './routes/employer.routes.js';
-
+import jobRoutes from './routes/jobVacancy.routes.js';
 const app = express();
 
 app.use(express.json());
@@ -22,5 +22,6 @@ app.use('/api/audit', auditLogRoutes);
 app.use('/api/admin', companyRoutes);
 app.use('/api/subscription-payment', subscriptionPaymentRoutes);
 app.use('/api/employer', employerRoute);
+app.use('/api/jobs', jobRoutes);
 
 export default app;
