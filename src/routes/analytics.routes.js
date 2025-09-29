@@ -8,12 +8,12 @@
 // router.get("/revenue", auth, rbac(["owner","superadmin"]), revenueReport);
 // export default router;
 
-import express from 'express';
-import { activeSubscriptions, monthlyRevenue } from '../controllers/analytics.controller.js';
+// import express from 'express';
+// import { activeSubscriptions, monthlyRevenue } from '../controllers/analytics.controller.js';
 
-const router = express.Router();
+// const router = express.Router();
 
-router.get('/monthly-revenue', monthlyRevenue);
-router.get('/active-subscriptions', activeSubscriptions);
+// router.get('/monthly-revenue', monthlyRevenue);
+// router.get('/active-subscriptions', activeSubscriptions);
 
-export default router;
+// export default router;
