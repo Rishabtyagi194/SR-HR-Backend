@@ -8,7 +8,6 @@ import adminRoutes from './routes/superAdminRoutes.js';
 // import authRoutes from './routes/authRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
-import subscriptionPaymentRoutes from './routes/subscriptionPayment.routes.js';
 import employerRoutes from './routes/employerRoutes.js';
 // import jobRoutes from './routes/jobVacancy.routes.js';
 
@@ -36,7 +35,6 @@ app.use('/api/employer', employerRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 
-app.use('/api/subscription-payment', subscriptionPaymentRoutes);
 // app.use('/api/jobs', jobRoutes);
 
 export default app;
