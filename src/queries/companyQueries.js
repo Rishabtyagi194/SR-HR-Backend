@@ -1,4 +1,4 @@
-// src/repositories/companyRepository.js
+// src/queries/companyQueries.js
 import db from '../config/database.js';
 import Company from '../models/Companies.model.js';
 

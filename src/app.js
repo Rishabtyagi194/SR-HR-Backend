@@ -14,12 +14,13 @@ import employerRoutes from './routes/employerRoutes.js';
 const app = express();
 
 app.use(helmet());
-app.use(
-  cors({
-    origin: 'https://sr-hrportal.netlify.app',
-    credentials: true,
-  }),
-);
+app.use(cors());
+// app.use(
+//   cors({
+//     origin: 'https://sr-hrportal.netlify.app',
+//     credentials: true,
+//   }),
+// );
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
