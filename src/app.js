@@ -13,7 +13,7 @@ import employerRoutes from './routes/employerRoutes.js';
 
 const app = express();
 
-app.use(helmet());
+// app.use(helmet());
 app.use(cors());
 // app.use(
 //   cors({
@@ -34,8 +34,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
 // app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes);
-console.log('✅ Mounted /api/company routes');
-
 app.use('/api/subscriptions', subscriptionRoutes);
 
 // app.use('/api/jobs', jobRoutes);
