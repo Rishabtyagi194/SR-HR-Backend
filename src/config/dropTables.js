@@ -1,0 +1,29 @@
+import db from './database.js';
+
+const pool = db.getPool();
+
+export const dropAllTables = async () => {
+  try {
+    const connection = await pool.getConnection();
+
+    // Disable foreign key checks to drop tables safely
+    await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+
+    // Drop tables in reverse order of dependencies
+    const tables = ['employer_users', 'companies', 'admins', 'plan_options', 'subscription_categories'];
+
+    for (const table of tables) {
+      await connection.query(`DROP TABLE IF EXISTS ${table}`);
+      console.log(`Dropped table: ${table}`);
+    }
+
+    // Re-enable foreign key checks
+    await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+
+    connection.release();
+    console.log('All tables dropped successfully');
+  } catch (error) {
+    console.error('Error dropping tables:', error);
+    throw error;
+  }
+};

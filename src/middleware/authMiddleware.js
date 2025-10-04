@@ -8,7 +8,12 @@ export const Authenticate = (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // contains id + role + permissions
+    // attach decoded employer data to req.user
+    req.user = {
+      id: payload.id, // employer id
+      company_id: payload.company_id, // employer's company id
+      role: payload.role,
+    };
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Invalid token' });
