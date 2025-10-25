@@ -83,6 +83,11 @@ class CompanyQueries {
         verified: row.verified,
         status: row.status,
         admin_user_id: row.admin_user_id,
+<<<<<<< HEAD
+=======
+
+        // admin details
+>>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
         admin: row.admin_user_id
           ? {
               id: row.admin_user_id,
@@ -99,7 +104,11 @@ class CompanyQueries {
   }
 
   async deleteCompanyById(id) {
+<<<<<<< HEAD
     const [result] = await getWritePool().execute('DELETE FROM companies WHERE id = ?', [id]);
+=======
+    const [result] = await pool.execute('DELETE FROM companies WHERE id = ?', [id]);
+>>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
     return result.affectedRows > 0;
   }
 }

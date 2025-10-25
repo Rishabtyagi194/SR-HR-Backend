@@ -42,6 +42,7 @@ class EmployerQueries {
   // for login
   async findByEmailOrPhone(identifier) {
     const query = isNaN(identifier) ? 'SELECT * FROM employer_users WHERE email = ?' : 'SELECT * FROM employer_users WHERE phone = ?';
+<<<<<<< HEAD
 
     const [rows] = await getReadPool().execute(query, [identifier]);
     return rows.length > 0 ? new EmployerUser(rows[0]) : null;
@@ -84,6 +85,8 @@ class EmployerQueries {
   }
 
   // ------------------------------------------------------------
+=======
+>>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
 
   // For super admin (can update any user)
   async updateUser(id, updateData) {
@@ -124,6 +127,83 @@ class EmployerQueries {
     return result.affectedRows > 0;
   }
 
+<<<<<<< HEAD
+=======
+  // ------------------------------------------------------------
+
+  // get all employers
+  async findAllEmployers() {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE role = "employer_admin"');
+    return rows.map((row) => new EmployerUser(row));
+  }
+
+  // ------------------------------------------------------------
+
+  // get all staff created by a specific employer
+  async findAllStaffByEmployer(employerId) {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE role = "employer_staff" AND employer_id = ?', [employerId]);
+    return rows.map((row) => new EmployerUser(row));
+  }
+
+  // ------------------------------------------------------------
+
+  // get user by id
+  async findById(id) {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ?', [id]);
+    return rows.length > 0 ? new EmployerUser(rows[0]) : null;
+  }
+
+  // get staff by id under a specific employer
+  async findStaffByIdAndEmployer(userId, employerId) {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ? AND employer_id = ? AND role = "employer_staff"', [
+      userId,
+      employerId,
+    ]);
+    return rows.length > 0 ? new EmployerUser(rows[0]) : null;
+  }
+
+  // ------------------------------------------------------------
+
+  // For super admin (can update any user)
+  async updateUser(id, updateData) {
+    const fields = [];
+    const values = [];
+
+    if (updateData.name) {
+      fields.push('name = ?');
+      values.push(updateData.name);
+    }
+    if (updateData.email) {
+      fields.push('email = ?');
+      values.push(updateData.email);
+    }
+    if (updateData.phone) {
+      fields.push('phone = ?');
+      values.push(updateData.phone);
+    }
+    if (updateData.role) {
+      fields.push('role = ?');
+      values.push(updateData.role);
+    }
+    if (updateData.is_active !== undefined) {
+      fields.push('is_active = ?');
+      values.push(updateData.is_active ? 1 : 0);
+    }
+    if (updateData.password) {
+      const hashedPassword = await bcrypt.hash(updateData.password, 10);
+      fields.push('password = ?');
+      values.push(hashedPassword);
+    }
+
+    if (fields.length === 0) return null;
+
+    values.push(id);
+    const [result] = await pool.execute(`UPDATE employer_users SET ${fields.join(', ')} WHERE id = ?`, values);
+
+    return result.affectedRows > 0;
+  }
+
+>>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
   // For employer admin (can update only their own staff)
   async updateUserByEmployer(id, employerId, updateData) {
     const fields = [];
@@ -159,7 +239,11 @@ class EmployerQueries {
 
     values.push(id, employerId);
 
+<<<<<<< HEAD
     const [result] = await getWritePool().execute(
+=======
+    const [result] = await pool.execute(
+>>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
       `UPDATE employer_users 
      SET ${fields.join(', ')} 
      WHERE id = ? AND employer_id = ? AND role = 'employer_staff'`,
@@ -173,7 +257,11 @@ class EmployerQueries {
 
   // Delete employer/staff
   async deleteUser(id) {
+<<<<<<< HEAD
     const [result] = await getWritePool().execute('DELETE FROM employer_users WHERE id = ?', [id]);
+=======
+    const [result] = await pool.execute('DELETE FROM employer_users WHERE id = ?', [id]);
+>>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
     return result.affectedRows > 0;
   }
 
