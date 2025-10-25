@@ -27,3 +27,26 @@ export const dropAllTables = async () => {
     throw error;
   }
 };
+
+/**
+ * Drop a single table by name
+ * @param {string} tableName - The name of the table to drop
+ */
+export const dropSingleTable = async (tableName) => {
+  if (!tableName) throw new Error('Table name is required');
+
+  try {
+    const connection = await pool.getConnection();
+
+    await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+    await connection.query(`DROP TABLE IF EXISTS \`${tableName}\``);
+    await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+
+    connection.release();
+
+    console.log(`✅ Dropped table: ${tableName}`);
+  } catch (error) {
+    console.error(`❌ Error dropping table ${tableName}:`, error);
+    throw error;
+  }
+};

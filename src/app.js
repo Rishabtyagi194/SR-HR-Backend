@@ -9,7 +9,7 @@ import adminRoutes from './routes/superAdminRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
-// import jobRoutes from './routes/jobVacancy.routes.js';
+import jobsRoutes from './routes/jobsRoutes.js';
 
 const app = express();
 
@@ -35,6 +35,7 @@ app.use('/api/employer', employerRoutes);
 // app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/jobs', jobsRoutes);
 
 // app.use('/api/jobs', jobRoutes);
 
