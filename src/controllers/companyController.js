@@ -1,4 +1,3 @@
-// src/controllers/companyController.js
 import companyService from '../services/companyService.js';
 
 export const createCompanyAndEmployer = async (req, res) => {
