@@ -18,7 +18,6 @@ class EmployerUser {
     }
   }
 }
-
 export default EmployerUser;
 
 // class EmployerUser {

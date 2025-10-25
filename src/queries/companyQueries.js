@@ -92,7 +92,7 @@ class CompanyQueries {
         status: row.status,
         admin_user_id: row.admin_user_id,
 
-        // include joined admin details
+        // admin details
         admin: row.admin_user_id
           ? {
               id: row.admin_user_id,
@@ -106,6 +106,11 @@ class CompanyQueries {
       })),
       total: countRows[0].total,
     };
+  }
+
+  async deleteCompanyById(id) {
+    const [result] = await pool.execute('DELETE FROM companies WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 }
 

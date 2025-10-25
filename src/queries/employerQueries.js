@@ -39,23 +39,147 @@ class EmployerQueries {
       is_active: userData.is_active ? true : false,
     };
   }
+  // ------------------------------------------------------------
 
-  async findById(id) {
-    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ?', [id]);
-    return rows.length > 0 ? new EmployerUser(rows[0]) : null;
-  }
-
-  async findByEmail(email) {
-    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE email = ?', [email]);
-    return rows.length > 0 ? new EmployerUser(rows[0]) : null;
-  }
-
+  // for login
   async findByEmailOrPhone(identifier) {
     const query = isNaN(identifier) ? 'SELECT * FROM employer_users WHERE email = ?' : 'SELECT * FROM employer_users WHERE phone = ?';
 
     const [rows] = await pool.execute(query, [identifier]);
     return rows.length > 0 ? new EmployerUser(rows[0]) : null;
   }
+
+  // ------------------------------------------------------------
+
+  // get all employers
+  async findAllEmployers() {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE role = "employer_admin"');
+    return rows.map((row) => new EmployerUser(row));
+  }
+
+  // ------------------------------------------------------------
+
+  // get all staff created by a specific employer
+  async findAllStaffByEmployer(employerId) {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE role = "employer_staff" AND employer_id = ?', [employerId]);
+    return rows.map((row) => new EmployerUser(row));
+  }
+
+  // ------------------------------------------------------------
+
+  // get user by id
+  async findById(id) {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ?', [id]);
+    return rows.length > 0 ? new EmployerUser(rows[0]) : null;
+  }
+
+  // get staff by id under a specific employer
+  async findStaffByIdAndEmployer(userId, employerId) {
+    const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ? AND employer_id = ? AND role = "employer_staff"', [
+      userId,
+      employerId,
+    ]);
+    return rows.length > 0 ? new EmployerUser(rows[0]) : null;
+  }
+
+  // ------------------------------------------------------------
+
+  // For super admin (can update any user)
+  async updateUser(id, updateData) {
+    const fields = [];
+    const values = [];
+
+    if (updateData.name) {
+      fields.push('name = ?');
+      values.push(updateData.name);
+    }
+    if (updateData.email) {
+      fields.push('email = ?');
+      values.push(updateData.email);
+    }
+    if (updateData.phone) {
+      fields.push('phone = ?');
+      values.push(updateData.phone);
+    }
+    if (updateData.role) {
+      fields.push('role = ?');
+      values.push(updateData.role);
+    }
+    if (updateData.is_active !== undefined) {
+      fields.push('is_active = ?');
+      values.push(updateData.is_active ? 1 : 0);
+    }
+    if (updateData.password) {
+      const hashedPassword = await bcrypt.hash(updateData.password, 10);
+      fields.push('password = ?');
+      values.push(hashedPassword);
+    }
+
+    if (fields.length === 0) return null;
+
+    values.push(id);
+    const [result] = await pool.execute(`UPDATE employer_users SET ${fields.join(', ')} WHERE id = ?`, values);
+
+    return result.affectedRows > 0;
+  }
+
+  // For employer admin (can update only their own staff)
+  async updateUserByEmployer(id, employerId, updateData) {
+    const fields = [];
+    const values = [];
+
+    if (updateData.name) {
+      fields.push('name = ?');
+      values.push(updateData.name);
+    }
+    if (updateData.email) {
+      fields.push('email = ?');
+      values.push(updateData.email);
+    }
+    if (updateData.phone) {
+      fields.push('phone = ?');
+      values.push(updateData.phone);
+    }
+    if (updateData.role) {
+      fields.push('role = ?');
+      values.push(updateData.role);
+    }
+    if (updateData.is_active !== undefined) {
+      fields.push('is_active = ?');
+      values.push(updateData.is_active ? 1 : 0);
+    }
+    if (updateData.password) {
+      const hashedPassword = await bcrypt.hash(updateData.password, 10);
+      fields.push('password = ?');
+      values.push(hashedPassword);
+    }
+
+    if (fields.length === 0) return null;
+
+    values.push(id, employerId);
+
+    const [result] = await pool.execute(
+      `UPDATE employer_users 
+     SET ${fields.join(', ')} 
+     WHERE id = ? AND employer_id = ? AND role = 'employer_staff'`,
+      values,
+    );
+
+    return result.affectedRows > 0;
+  }
+
+  // ------------------------------------------------------------
+
+  // Delete employer/staff
+  async deleteUser(id) {
+    const [result] = await pool.execute('DELETE FROM employer_users WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+  }
+
+  // async findByEmail(email) {
+  //   const [rows] = await pool.execute('SELECT * FROM employer_users WHERE email = ?', [email]);
+  //   return rows.length > 0 ? new EmployerUser(rows[0]) : null;
+  // }
 
   async updateLoginInfo(employerId, ip, userAgent) {
     const loginHistory = {
