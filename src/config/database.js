@@ -187,7 +187,6 @@ export const initializeDatabase = async () => {
 
     // Hot Vacancy jobs Table
     await connection.execute(`
-<<<<<<< HEAD
           CREATE TABLE IF NOT EXISTS HotVacancyJobs (
           job_id INT AUTO_INCREMENT PRIMARY KEY,
           company_id INT,
@@ -355,7 +354,6 @@ export const initializeDatabase = async () => {
         await redis.lPush(`user:${userId}:logs`, JSON.stringify({ action: 'login', time: Date.now() }));
       - Keep MySQL logs for permanent storage and audits.
     */
-=======
   CREATE TABLE IF NOT EXISTS HotVacancyJobs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     company_id INT,
@@ -398,7 +396,6 @@ export const initializeDatabase = async () => {
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )
 `);
->>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
 
     connection.release();
     console.log('All database tables initialized successfully.');
