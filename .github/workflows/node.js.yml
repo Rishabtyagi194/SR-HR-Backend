@@ -26,7 +26,7 @@ jobs:
       - name: Deploy main branch to Production
         if: github.ref == 'refs/heads/main'
         run: |
-          ssh -o StrictHostKeyChecking=no rozgaruser@31.97.61.6 "
+          ssh -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227  "
             cd /var/www/prod/SR-HR-Backend &&
             git fetch origin main &&
             git reset --hard origin/main &&
@@ -38,7 +38,7 @@ jobs:
       - name: Deploy qa branch to Staging
         if: github.ref == 'refs/heads/qa'
         run: |
-          ssh -o StrictHostKeyChecking=no rozgaruser@31.97.61.6 "
+          ssh -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227  "
             cd /var/www/qa/SR-HR-Backend &&
             git fetch origin qa &&
             git reset --hard origin/qa &&
