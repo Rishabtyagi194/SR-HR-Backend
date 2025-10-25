@@ -7,7 +7,6 @@ export const generateToken = (user) => {
       email: user.email,
       role: user.role,
       company_id: user.company_id,
-      permissions: user.permissions,
     },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
