@@ -1,12 +1,10 @@
 // src/queries/companyQueries.js
-import db from '../config/database.js';
+import { getReadPool, getWritePool } from '../config/database.js';
 import Company from '../models/Companies.model.js';
-
-const pool = db.getPool();
 
 class CompanyQueries {
   async create(companyData) {
-    const [result] = await pool.execute(
+    const [result] = await getWritePool().execute(
       `INSERT INTO companies 
       (name, industry, size, website, logo_url, contact_email, contact_phone, address) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -22,19 +20,21 @@ class CompanyQueries {
       ],
     );
 
-    return this.findById(result.insertId);
+    return this.findById(result.insertId, true);
   }
 
-  async findById(id) {
+  async findById(id, useMaster = false) {
+    const pool = useMaster ? getWritePool() : getReadPool();
     const [rows] = await pool.execute('SELECT * FROM companies WHERE id = ?', [id]);
     return rows.length > 0 ? new Company(rows[0]) : null;
   }
 
   async updateAdminUserId(companyId, adminUserId) {
-    await pool.execute('UPDATE companies SET admin_user_id = ? WHERE id = ?', [adminUserId, companyId]);
+    await getWritePool().execute('UPDATE companies SET admin_user_id = ? WHERE id = ?', [adminUserId, companyId]);
   }
 
   async findAll(query = {}, options = {}) {
+    const pool = getReadPool();
     let whereClause = 'WHERE 1=1';
     const params = [];
 
@@ -53,29 +53,21 @@ class CompanyQueries {
       params.push(query.adminUserId);
     }
 
-    const limit = parseInt(options.limit, 10);
-    const offset = parseInt(options.offset, 10);
+    const limit = parseInt(options.limit, 10) || 10;
+    const offset = parseInt(options.offset, 10) || 0;
 
-    if (isNaN(limit) || isNaN(offset)) {
-      throw new Error(`Invalid pagination values: limit=${options.limit}, offset=${options.offset}`);
-    }
-
-    // whitelist columns for ORDER BY
     const allowedSort = ['created_at', 'name', 'status'];
     const sortBy = allowedSort.includes(options.sortBy) ? options.sortBy : 'created_at';
-
     const order = options.order === 'asc' ? 'ASC' : 'DESC';
-
-    console.log({ limit, offset, params });
 
     const [rows] = await pool.execute(
       `SELECT c.*, eu.name as admin_name, eu.email as admin_email, eu.phone as admin_phone, eu.role as admin_role, eu.is_active as admin_active
-        FROM companies c
-        LEFT JOIN employer_users eu ON c.admin_user_id = eu.id
-        WHERE 1=1
-        ORDER BY ${sortBy} ${order}
-        LIMIT ${pool.escape(limit)} OFFSET ${pool.escape(offset)}`,
-      params,
+       FROM companies c
+       LEFT JOIN employer_users eu ON c.admin_user_id = eu.id
+       ${whereClause}
+       ORDER BY ${sortBy} ${order}
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset],
     );
 
     const [countRows] = await pool.execute(`SELECT COUNT(*) as total FROM companies c ${whereClause}`, params);
@@ -91,8 +83,6 @@ class CompanyQueries {
         verified: row.verified,
         status: row.status,
         admin_user_id: row.admin_user_id,
-
-        // include joined admin details
         admin: row.admin_user_id
           ? {
               id: row.admin_user_id,
@@ -106,6 +96,11 @@ class CompanyQueries {
       })),
       total: countRows[0].total,
     };
+  }
+
+  async deleteCompanyById(id) {
+    const [result] = await getWritePool().execute('DELETE FROM companies WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 }
 

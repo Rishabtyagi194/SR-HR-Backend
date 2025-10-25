@@ -1,6 +1,5 @@
-import db from '../config/database.js';
+import { getReadPool, getWritePool } from '../config/database.js';
 import employerStaffModel from '../models/EmployersAndUsers.model.js';
-const pool = db.getPool();
 import bcrypt from 'bcrypt';
 
 class StaffQueries {
@@ -19,7 +18,7 @@ class StaffQueries {
       staffData.isActive || 1,
     ];
 
-    const [result] = await pool.execute(
+    const [result] = await getWritePool().execute(
       `INSERT INTO employer_users 
        (company_id, employer_id, name, email, password, phone, role, permissions, is_active) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -40,7 +39,8 @@ class StaffQueries {
     };
   }
 
-  async findById(id) {
+  async findById(id, useMaster = false) {
+    const pool = useMaster ? getWritePool() : getReadPool();
     const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ?', [id]);
     return rows.length > 0 ? new employerStaffModel(rows[0]) : null;
   }
@@ -48,7 +48,7 @@ class StaffQueries {
   async findByEmailOrPhone(identifier) {
     const query = isNaN(identifier) ? 'SELECT * FROM employer_users WHERE email = ?' : 'SELECT * FROM employer_users WHERE phone = ?';
 
-    const [rows] = await pool.execute(query, [identifier]);
+    const [rows] = await getReadPool().execute(query, [identifier]);
     return rows.length > 0 ? new employerStaffModel(rows[0]) : null;
   }
 
@@ -58,7 +58,7 @@ class StaffQueries {
       ip,
       userAgent,
     };
-    await pool.execute(
+    await getWritePool().execute(
       `UPDATE employer_users SET 
         last_login = CURRENT_TIMEsTAMP,
         login_history = JSON_ARRAY_APPEND(COALESCE(login_history, '[]'), '$', ?)
