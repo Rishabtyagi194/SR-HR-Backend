@@ -187,7 +187,6 @@ export const initializeDatabase = async () => {
 
     // Hot Vacancy jobs Table
     await connection.execute(`
-<<<<<<< HEAD
           CREATE TABLE IF NOT EXISTS HotVacancyJobs (
           job_id INT AUTO_INCREMENT PRIMARY KEY,
           company_id INT,
@@ -355,50 +354,6 @@ export const initializeDatabase = async () => {
         await redis.lPush(`user:${userId}:logs`, JSON.stringify({ action: 'login', time: Date.now() }));
       - Keep MySQL logs for permanent storage and audits.
     */
-=======
-  CREATE TABLE IF NOT EXISTS HotVacancyJobs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    company_id INT,
-    employer_id INT,
-    staff_id INT,
-    jobTitle VARCHAR(255),
-    employmentType VARCHAR(255),
-    skills JSON,
-    CompanyIndustry VARCHAR(255),
-    workMode VARCHAR(255),
-    jobLocation JSON,
-    willingToRelocate Boolean,
-    locality VARCHAR(255),
-    experinceFrom VARCHAR(20),
-    experinceTo VARCHAR(20),
-    salaryRangeFrom VARCHAR(20),
-    salaryRangeTo VARCHAR(20),
-    qualification JSON,
-    jobDescription TEXT,
-    AboutCompany TEXT,
-    
-    -- Walk-in details fields
-    include_walk_in_details BOOLEAN DEFAULT FALSE,
-    walk_in_start_date DATE,
-    duration_days INT DEFAULT 1,
-    walk_in_start_time TIME,
-    walk_in_end_time TIME,
-    contact_person VARCHAR(255),
-    contact_number VARCHAR(20),
-    venue TEXT,
-    google_maps_url VARCHAR(500),
-    
-    -- Questions field (store as JSON to handle multiple questions)
-    
-    questions JSON,
-    
-    Status ENUM('active', 'draft', 'disable') DEFAULT 'active',
-    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-  )
-`);
->>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
 
     connection.release();
     console.log('All database tables initialized successfully.');
