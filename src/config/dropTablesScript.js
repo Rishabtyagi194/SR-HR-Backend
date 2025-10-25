@@ -2,8 +2,7 @@ import './config.js';
 
 import {
   dropAllTables,
-  // dropAllTables,
-  dropSingleTable,
+  // dropSingleTable,
 } from './dropTables.js';
 
 const run = async () => {
@@ -12,10 +11,6 @@ const run = async () => {
 
     // OR drop a single table:
     // await dropSingleTable('users');
-    // await dropAllTables();
-
-    // OR drop a single table:
-    await dropSingleTable('jobs');
     process.exit(0);
   } catch (err) {
     console.error(err);

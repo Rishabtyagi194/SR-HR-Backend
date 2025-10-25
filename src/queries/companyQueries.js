@@ -83,8 +83,6 @@ class CompanyQueries {
         verified: row.verified,
         status: row.status,
         admin_user_id: row.admin_user_id,
-
-        // admin details
         admin: row.admin_user_id
           ? {
               id: row.admin_user_id,
@@ -102,7 +100,6 @@ class CompanyQueries {
 
   async deleteCompanyById(id) {
     const [result] = await getWritePool().execute('DELETE FROM companies WHERE id = ?', [id]);
-    const [result] = await pool.execute('DELETE FROM companies WHERE id = ?', [id]);
     return result.affectedRows > 0;
   }
 }

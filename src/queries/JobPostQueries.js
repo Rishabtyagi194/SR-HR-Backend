@@ -1,8 +1,5 @@
 import { getReadPool, getWritePool } from '../config/database.js';
 import Jobs from '../models/Jobs.model.js';
-import db from '../config/database.js';
-import Jobs from '../models/Jobs.model.js';
-const pool = db.getPool();
 
 class jobQueries {
   async create(jobsdata) {
@@ -53,7 +50,6 @@ class jobQueries {
     ];
 
     const [result] = await getWritePool().execute(sql, values);
-    const [result] = await pool.execute(sql, values);
 
     // Return the complete job using fromDatabaseRow for proper parsing
     return await this.getJobById(result.insertId);
@@ -66,10 +62,6 @@ class jobQueries {
 
     //total jobs
     const [[{ total }]] = await getReadPool().execute(`SELECT COUNT(*) as total FROM HotVacancyJobs`);
-    const [rows] = await pool.query(`SELECT * FROM HotVacancyJobs ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`);
-
-    //total jobs
-    const [[{ total }]] = await pool.execute(`SELECT COUNT(*) as total FROM HotVacancyJobs`);
 
     return { jobs: rows, total };
   }
@@ -77,15 +69,12 @@ class jobQueries {
   async getJobById(id, useMaster = false) {
     const pool = useMaster ? getWritePool() : getReadPool();
     const [rows] = await pool.execute('SELECT * FROM HotVacancyJobs WHERE job_id = ?', [id]);
-  async getJobById(id) {
-    const [rows] = await pool.execute('SELECT * FROM HotVacancyJobs WHERE id = ?', [id]);
     return rows.length > 0 ? new Jobs(rows[0]) : null;
   }
 
   async updateJobById(id, updateData) {
     // Fetch existing job
     const [existingRows] = await getReadPool().execute('SELECT * FROM HotVacancyJobs WHERE job_id = ?', [id]);
-    const [existingRows] = await pool.execute('SELECT * FROM HotVacancyJobs WHERE id = ?', [id]);
     if (existingRows.length === 0) {
       return null;
     }
@@ -113,8 +102,6 @@ class jobQueries {
 
     const sql = `UPDATE HotVacancyJobs SET ${fields.join(', ')} WHERE job_id = ?`;
     await getWritePool().execute(sql, values);
-    const sql = `UPDATE HotVacancyJobs SET ${fields.join(', ')} WHERE id = ?`;
-    await pool.execute(sql, values);
 
     // Return updated job
     return new Jobs(updatedJob);
@@ -122,7 +109,6 @@ class jobQueries {
 
   async deleteJobById(id) {
     const [result] = await getWritePool().execute('DELETE FROM HotVacancyJobs WHERE job_id = ?', [id]);
-    const [result] = await pool.execute('DELETE FROM HotVacancyJobs WHERE id = ?', [id]);
     return result.affectedRows > 0; // true if a row was deleted
   }
 }
