@@ -20,8 +20,12 @@ class superAdminService {
 
   async authenticateAdmin(username, password) {
     const admin = await superAdminQueries.findByEmailOrPhone(username);
+
+    //  No admin found
     if (!admin) {
-      throw new Error('Invalid username or password');
+      const isEmail = isNaN(username);
+      const field = isEmail ? 'email' : 'phone';
+      throw new Error(`User not found with this ${field}`);
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);

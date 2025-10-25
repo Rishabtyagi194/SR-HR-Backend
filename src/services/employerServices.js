@@ -6,10 +6,15 @@ import bcrypt from 'bcrypt';
 class EmployerService {
   async authenticateEmployer(username, password, ip, userAgent) {
     const employer = await EmployerQueries.findByEmailOrPhone(username);
+    // if (!employer) {
+    //   throw new Error('Invalid username or password');
+    // }
+    //  No admin found
     if (!employer) {
-      throw new Error('Invalid username or password');
+      const isEmail = isNaN(username);
+      const field = isEmail ? 'email' : 'phone';
+      throw new Error(`User not found with this ${field}`);
     }
-
     // is account active
     if (!employer.isActive) {
       throw new Error('Account is inactive. Please contact support.');

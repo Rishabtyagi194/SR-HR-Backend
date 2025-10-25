@@ -54,6 +54,9 @@ export const AdminLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(401).json({ message: error.message });
+    const knownErrors = ['User not found with this email', 'User not found with this phone', 'Invalid credentials'];
+
+    const statusCode = knownErrors.includes(error.message) ? 401 : 500;
+    res.status(statusCode).json({ message: error.message });
   }
 };
