@@ -1,7 +1,7 @@
+// config/database.js
 import mysql from 'mysql2/promise';
 
 // Read/Write Replica Setup
-
 let writePool;
 let readPool;
 
@@ -331,6 +331,21 @@ export const initializeDatabase = async () => {
         FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
         INDEX idx_user (user_id),
         INDEX idx_job (job_id)
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS employee_data_uploads (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        company_id INT NOT NULL,
+        uploaded_by INT NOT NULL,
+        uploaded_by_role ENUM('employer_admin', 'employer_staff') NOT NULL,
+        data_json JSON NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+        FOREIGN KEY (uploaded_by) REFERENCES employer_users(id) ON DELETE CASCADE,
+        INDEX idx_company_id (company_id),
+        INDEX idx_uploaded_by (uploaded_by)
       )
     `);
 
