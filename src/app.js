@@ -10,11 +10,8 @@ import companyRoutes from './routes/companyRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
 import jobsRoutes from './routes/jobsRoutes.js';
-<<<<<<< HEAD
 import userRoutes from './routes/userRoutes.js';
-=======
-
->>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
+import uploadExcel from './routes/uploadRoutes.js';
 const app = express();
 
 // app.use(helmet());
@@ -36,15 +33,10 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
-// app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/jobs', jobsRoutes);
-<<<<<<< HEAD
 app.use('/api/users', userRoutes);
-=======
-
-// app.use('/api/jobs', jobRoutes);
->>>>>>> 25f851ac7d721537ea311ef8d52d1e578de77e08
+app.use('/api', uploadExcel);
 
 export default app;
