@@ -9,9 +9,12 @@ import adminRoutes from './routes/superAdminRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
-import jobsRoutes from './routes/jobsRoutes.js';
+import hotVacancyJobsRoutes from './routes/hotVacancyJobsRoutes.js';
+import internshipJobsRoutes from './routes/internshipJobsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import uploadExcel from './routes/uploadRoutes.js';
+import jobApplication from './routes/jobApplicationRoutes.js';
+
 const app = express();
 
 // app.use(helmet());
@@ -35,8 +38,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
-app.use('/api/jobs', jobsRoutes);
+app.use('/api/jobs/applications', jobApplication);
+app.use('/api/jobs', hotVacancyJobsRoutes);
+app.use('/api/internship', internshipJobsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', uploadExcel);
-
 export default app;

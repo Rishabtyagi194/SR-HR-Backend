@@ -10,15 +10,20 @@ export const getRedisClient = () => {
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD || undefined,
       db: process.env.REDIS_DB || 0,
-      // retry strategy for reliability
+      // Add a better retry strategy to handle connection issues
       retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
+        const delay = Math.min(times * 200, 3000);
+        console.log(`Redis reconnect attempt #${times}, retrying in ${delay}ms`);
         return delay;
       },
+      connectTimeout: 10000, // 10 seconds timeout
+      lazyConnect: false, // connect immediately
     });
 
-    redisClient.on('connect', () => console.log('✅ Redis connected'));
-    redisClient.on('error', (err) => console.error('❌ Redis error:', err));
+    redisClient.on('connect', () => console.log(' Redis connected successfully'));
+    redisClient.on('error', (err) => console.error(' Redis error:', err));
+    redisClient.on('reconnecting', () => console.log(' Redis reconnecting...'));
   }
+
   return redisClient;
 };

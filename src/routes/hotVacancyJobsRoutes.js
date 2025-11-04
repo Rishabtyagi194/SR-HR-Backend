@@ -1,12 +1,13 @@
 import express from 'express';
+
+import { Authenticate } from '../middleware/authMiddleware.js';
 import {
   createJobsController,
   deleteJobsController,
   getJobsByIdController,
   ListAllJobsController,
   updateJobsController,
-} from '../controllers/jobsController.js';
-import { Authenticate } from '../middleware/authMiddleware.js';
+} from '../controllers/hotVacancyJobController.js';
 
 const router = express.Router();
 

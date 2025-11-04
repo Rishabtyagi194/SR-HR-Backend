@@ -41,6 +41,24 @@ class UploadService {
       return await uploadQueries.findByUploader(user.id);
     }
   }
+
+  async updateRecordById(user, id, data) {
+    const existing = await uploadQueries.getRecordById(id);
+    if (!existing) throw new Error('Record not found');
+    if (existing.company_id !== user.company_id) throw new Error('Unauthorized access');
+
+    await uploadQueries.updateRecordById(id, data);
+    return { id, updated: true };
+  }
+
+  async deleteRecordById(user, id) {
+    const existing = await uploadQueries.getRecordById(id);
+    if (!existing) throw new Error('Record not found');
+    if (existing.company_id !== user.company_id) throw new Error('Unauthorized access');
+
+    await uploadQueries.deleteRecordById(id);
+    return { id, deleted: true };
+  }
 }
 
 export default new UploadService();

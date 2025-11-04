@@ -1,5 +1,4 @@
 // src/services/employerService.js
-import employerQueries from '../queries/employerQueries.js';
 import EmployerQueries from '../queries/employerQueries.js';
 import bcrypt from 'bcrypt';
 
