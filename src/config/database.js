@@ -201,10 +201,10 @@ export const initializeDatabase = async () => {
           jobLocation JSON,
           willingToRelocate Boolean,
           locality VARCHAR(255),
-          experinceFrom VARCHAR(20),
-          experinceTo VARCHAR(20),
-          salaryRangeFrom VARCHAR(20),
-          salaryRangeTo VARCHAR(20),
+          experinceFrom VARCHAR(255),
+          experinceTo VARCHAR(255),
+          salaryRangeFrom VARCHAR(255),
+          salaryRangeTo VARCHAR(255),
           qualification JSON,
           jobDescription TEXT,
           AboutCompany TEXT,
@@ -224,7 +224,7 @@ export const initializeDatabase = async () => {
           
           questions JSON,
           
-          Status ENUM('active', 'draft', 'disable') DEFAULT 'active',
+          Status ENUM('active', 'draft', 'disable') DEFAULT 'draft',
           FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -260,7 +260,7 @@ export const initializeDatabase = async () => {
           addResponseCode VARCHAR(255),
           AboutCompany TEXT,
           
-          Status ENUM('active', 'draft', 'disable') DEFAULT 'active',
+          Status ENUM('active', 'draft', 'disable') DEFAULT 'draft',
           FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
