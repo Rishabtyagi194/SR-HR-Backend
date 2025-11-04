@@ -34,6 +34,7 @@ export const createJobsController = async (req, res) => {
 
       // Questions field
       questions,
+      Status,
     } = req.body;
 
     // base payload
@@ -68,6 +69,7 @@ export const createJobsController = async (req, res) => {
 
       // Questions field
       questions,
+      Status,
     };
 
     // role-based assignment
@@ -96,7 +98,7 @@ export const createJobsController = async (req, res) => {
 export const ListAllJobsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
 
     const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit);
 

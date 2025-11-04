@@ -46,7 +46,7 @@ class jobQueries {
       dbObject.duration_days,
       dbObject.contact_number,
       dbObject.questions,
-      dbObject.Status || 'active',
+      dbObject.Status || 'draft',
     ];
 
     const [result] = await getWritePool().execute(sql, values);
