@@ -6,6 +6,8 @@ const redis = getRedisClient();
 
 class JobsService {
   async createJobs(jobsData) {
+    // console.log('jobsData', jobsData);
+
     const job = await JobPostQueries.create(jobsData);
     // Invalidate relevant caches after creation
     await this.invalidateJobCache(null, jobsData.company_id);
