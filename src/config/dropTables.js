@@ -24,6 +24,8 @@ export const dropAllTables = async () => {
       'user_applications',
       'employee_data_uploads',
       'user_logs',
+      'job_application_answers',
+      'job_applications',
     ];
 
     for (const table of tables) {

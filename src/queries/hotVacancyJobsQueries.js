@@ -6,6 +6,9 @@ class jobQueries {
     const job = new Jobs(jobsdata);
     const dbObject = job.toDatabaseObject();
 
+    console.log('jobsData', job);
+    console.log('dbObject', dbObject.Status);
+
     const sql = `
     INSERT INTO HotVacancyJobs (
         company_id, employer_id, staff_id, jobTitle, employmentType, skills,
@@ -48,6 +51,8 @@ class jobQueries {
       dbObject.questions,
       dbObject.Status || 'draft',
     ];
+
+    console.log('🔥 FINAL Status before insert:', dbObject.Status);
 
     const [result] = await getWritePool().execute(sql, values);
 

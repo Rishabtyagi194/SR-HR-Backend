@@ -32,7 +32,7 @@ class Jobs {
     // Questions field
     questions = [],
 
-    Status = 'active',
+    Status = 'draft',
     company_id,
     employer_id,
     staff_id,

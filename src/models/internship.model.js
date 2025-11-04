@@ -23,7 +23,7 @@ class Internship {
     addResponseCode,
     AboutCompany,
 
-    Status = 'active',
+    Status = 'draft',
     company_id,
     employer_id,
     staff_id,
