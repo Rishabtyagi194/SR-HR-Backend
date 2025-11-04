@@ -41,7 +41,7 @@ addResponseCode, AboutCompany, Status
       dbObject.receivedResponseOverMail,
       dbObject.addResponseCode,
       dbObject.AboutCompany,
-      dbObject.Status || 'active',
+      dbObject.Status || 'draft',
     ];
 
     if (values.includes(undefined)) {
