@@ -1,5 +1,5 @@
 import { getReadPool, getWritePool } from '../config/database.js';
-import Jobs from '../models/Jobs.model.js';
+import Jobs from '../models/hotVacancyJobs.model.js';
 
 class jobQueries {
   async create(jobsdata) {
@@ -46,7 +46,7 @@ class jobQueries {
       dbObject.duration_days,
       dbObject.contact_number,
       dbObject.questions,
-      dbObject.Status,
+      dbObject.Status || 'active',
     ];
 
     const [result] = await getWritePool().execute(sql, values);

@@ -14,7 +14,6 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Example: employer_23_20251026_163031.xlsx
     const ext = path.extname(file.originalname);
     const baseName = path.basename(file.originalname, ext).replace(/\s+/g, '_');
     const uniqueName = `${baseName}_${req.user?.id || 'anonymous'}_${Date.now()}${ext}`;
@@ -22,20 +21,59 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter for Excel + CSV files
+// Supported MIME types
+const allowedMimeTypes = [
+  // Images
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'image/jpg',
+  // PDFs
+  'application/pdf',
+  // Excel files
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // CSV
+  'text/csv',
+  'application/csv',
+  // Word documents
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  // Plain text
+  'text/plain',
+  // ZIP / RAR archives
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/x-rar-compressed',
+];
+
+// Supported extensions (fallback)
+const allowedExts = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.svg',
+  '.pdf',
+  '.xls',
+  '.xlsx',
+  '.csv',
+  '.doc',
+  '.docx',
+  '.txt',
+  '.zip',
+  '.rar',
+];
+
+// File filter
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-    'application/vnd.ms-excel', // .xls
-    'text/csv', // .csv
-    'application/csv', // some browsers send this
-  ];
-
   const ext = path.extname(file.originalname).toLowerCase();
-  const allowedExts = ['.xls', '.xlsx', '.csv'];
 
-  if (!allowedTypes.includes(file.mimetype) && !allowedExts.includes(ext)) {
-    return cb(new Error('Only Excel (.xls, .xlsx) or CSV (.csv) files are allowed!'), false);
+  if (!allowedMimeTypes.includes(file.mimetype) && !allowedExts.includes(ext)) {
+    return cb(new Error('Invalid file type! Allowed: Images, PDFs, Excel, CSV, Docs, Text, ZIP/RAR.'), false);
   }
   cb(null, true);
 };
@@ -45,7 +83,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB max
+    fileSize: 50 * 1024 * 1024, // 50 MB
   },
 });
 

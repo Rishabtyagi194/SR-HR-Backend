@@ -1,73 +1,55 @@
-import jobsServices from '../services/jobsServices.js';
+import internshipJobsServices from '../services/internshipJobsServices.js';
 
-export const createJobsController = async (req, res) => {
+export const createInternshipJobsController = async (req, res) => {
   try {
     const user = req.user;
 
     const {
-      jobTitle,
+      internshipTitle,
       employmentType,
-      skills,
-      CompanyIndustry,
+      duration,
+      internshipStartDate,
+      OfferStipend,
       workMode,
-      jobLocation,
+      intershipLocation,
       willingToRelocate,
-      locality,
-      experinceFrom,
-      experinceTo,
-      salaryRangeFrom,
-      salaryRangeTo,
+      CompanyIndustry,
+      perksAndBenefit,
+      noOfVacancies,
+      skills,
       qualification,
+      videoProfile,
+      lastDateToApply,
       jobDescription,
+      collabrateWithTeam,
+      receivedResponseOverMail,
+      addResponseCode,
       AboutCompany,
-
-      // Walk-in details fields
-      include_walk_in_details,
-      walk_in_start_date,
-      duration_days,
-      walk_in_start_time,
-      walk_in_end_time,
-      contact_person,
-      venue,
-      google_maps_url,
-      contact_number,
-
-      // Questions field
-      questions,
     } = req.body;
 
     // base payload
     let jobPayload = {
       company_id: user.company_id,
-      jobTitle,
+      internshipTitle,
       employmentType,
-      skills,
-      CompanyIndustry,
+      duration,
+      internshipStartDate,
+      OfferStipend,
       workMode,
-      jobLocation,
+      intershipLocation,
       willingToRelocate,
-      locality,
-      experinceFrom,
-      experinceTo,
-      salaryRangeFrom,
-      salaryRangeTo,
+      CompanyIndustry,
+      perksAndBenefit,
+      noOfVacancies,
+      skills,
       qualification,
+      videoProfile,
+      lastDateToApply,
       jobDescription,
+      collabrateWithTeam,
+      receivedResponseOverMail,
+      addResponseCode,
       AboutCompany,
-
-      // Walk-in details fields
-      include_walk_in_details,
-      walk_in_start_date,
-      duration_days,
-      walk_in_start_time,
-      walk_in_end_time,
-      contact_person,
-      venue,
-      google_maps_url,
-      contact_number,
-
-      // Questions field
-      questions,
     };
 
     // role-based assignment
@@ -81,24 +63,24 @@ export const createJobsController = async (req, res) => {
       return res.status(403).json({ message: 'unauthorized role to create jobs' });
     }
 
-    const result = await jobsServices.createJobs(jobPayload);
+    const result = await internshipJobsServices.createInternship(jobPayload);
 
     return res.status(201).json({
       message: 'Successfully posted job',
       job: result,
     });
   } catch (error) {
-    console.error('createJobsController error:', error);
+    console.error('create internship Controller error:', error);
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-export const ListAllJobsController = async (req, res) => {
+export const ListAllInternshipJobsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const { jobs, total } = await jobsServices.listAllJobs(page, limit);
+    const { jobs, total } = await internshipJobsServices.listAllInternship(page, limit);
 
     return res.status(200).json({
       message: 'Jobs fetched successfully',
@@ -113,10 +95,10 @@ export const ListAllJobsController = async (req, res) => {
   }
 };
 
-export const getJobsByIdController = async (req, res) => {
+export const getInternshipJobsByIdController = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await jobsServices.JobById(id);
+    const result = await internshipJobsServices.getinternshipById(id);
 
     if (!result) {
       return res.status(404).json({ message: 'Job not found' });
@@ -131,12 +113,12 @@ export const getJobsByIdController = async (req, res) => {
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-export const updateJobsController = async (req, res) => {
+export const updateInternshipJobsController = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body; // fields to update
 
-    const result = await jobsServices.updateJob(id, updateData);
+    const result = await internshipJobsServices.updateInternship(id, updateData);
 
     if (!result) {
       return res.status(404).json({ message: 'Job not found' });
@@ -152,11 +134,11 @@ export const updateJobsController = async (req, res) => {
   }
 };
 
-export const deleteJobsController = async (req, res) => {
+export const deleteInternshipJobsController = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await jobsServices.deleteJob(id);
+    const deleted = await internshipJobsServices.deleteInternship(id);
 
     if (!deleted) {
       return res.status(404).json({ message: 'Job not found' });

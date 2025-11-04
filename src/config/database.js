@@ -192,6 +192,7 @@ export const initializeDatabase = async () => {
           company_id INT,
           employer_id INT,
           staff_id INT,
+          category VARCHAR(255) DEFAULT 'HotVacancy',
           jobTitle VARCHAR(255),
           employmentType VARCHAR(255),
           skills JSON,
@@ -222,6 +223,42 @@ export const initializeDatabase = async () => {
           -- Questions field (store as JSON to handle multiple questions)
           
           questions JSON,
+          
+          Status ENUM('active', 'draft', 'disable') DEFAULT 'active',
+          FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Internship jobs Table
+    await connection.execute(`
+          CREATE TABLE IF NOT EXISTS InternshipJobs (
+          job_id INT AUTO_INCREMENT PRIMARY KEY,
+          company_id INT,
+          employer_id INT,
+          staff_id INT,
+          category VARCHAR(255) DEFAULT 'Internship',
+          internshipTitle VARCHAR(255),
+          employmentType VARCHAR(255),
+          duration VARCHAR(255),
+          internshipStartDate VARCHAR(255),
+          OfferStipend VARCHAR(255),
+          workMode VARCHAR(255),
+          intershipLocation JSON,
+          willingToRelocate Boolean,
+          CompanyIndustry VARCHAR(255),
+          perksAndBenefit VARCHAR(255),
+          noOfVacancies VARCHAR(20),
+          skills JSON,
+          qualification VARCHAR(20),
+          videoProfile VARCHAR(20),
+          jobDescription TEXT,
+          lastDateToApply VARCHAR(20),
+          collabrateWithTeam JSON,
+          receivedResponseOverMail VARCHAR(20),
+          addResponseCode VARCHAR(20),
+          AboutCompany TEXT,
           
           Status ENUM('active', 'draft', 'disable') DEFAULT 'active',
           FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
@@ -269,6 +306,7 @@ export const initializeDatabase = async () => {
         notice_period VARCHAR(50),
         expected_salary VARCHAR(50),
         resume_url VARCHAR(500),
+        resume_public_id VARCHAR(255),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -318,22 +356,36 @@ export const initializeDatabase = async () => {
     `);
 
     await connection.execute(`
-      CREATE TABLE IF NOT EXISTS user_applications (
+      CREATE TABLE IF NOT EXISTS job_applications (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         job_id INT NOT NULL,
         employer_id INT,
         company_id INT,
-        status ENUM('applied', 'viewed', 'shortlisted', 'rejected', 'hired') DEFAULT 'applied',
+        application_status ENUM('applied', 'viewed', 'shortlisted', 'rejected', 'hired') DEFAULT 'applied',
         applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (job_id) REFERENCES HotVacancyJobs(job_id) ON DELETE CASCADE,
+        FOREIGN KEY (employer_id) REFERENCES employer_users(id) ON DELETE CASCADE,
         FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+       
         INDEX idx_user (user_id),
         INDEX idx_job (job_id)
       )
     `);
 
+    await connection.execute(`
+         CREATE TABLE IF NOT EXISTS job_application_answers (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          application_id INT NOT NULL,
+          question_text TEXT NOT NULL,
+          answer_text TEXT,
+          FOREIGN KEY (application_id) REFERENCES job_applications(id) ON DELETE CASCADE
+        )
+      `);
+
+    // upload data excel Table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS employee_data_uploads (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -342,6 +394,7 @@ export const initializeDatabase = async () => {
         uploaded_by_role ENUM('employer_admin', 'employer_staff') NOT NULL,
         data_json JSON NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
         FOREIGN KEY (uploaded_by) REFERENCES employer_users(id) ON DELETE CASCADE,
         INDEX idx_company_id (company_id),

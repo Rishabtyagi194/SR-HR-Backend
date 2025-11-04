@@ -9,18 +9,20 @@ export const dropAllTables = async () => {
 
     // Drop tables in reverse order of dependencies
     const tables = [
-      'employer_users',
-      'companies',
+      // 'plan_options',
+      // 'subscription_categories',
       'admins',
-      'plan_options',
-      'subscription_categories',
+      'companies',
+      'employer_users',
       'HotVacancyJobs',
+      'InternshipJobs',
       'users',
       'user_profiles',
       'user_education',
       'user_experience',
       'user_skills',
       'user_applications',
+      'employee_data_uploads',
       'user_logs',
     ];
 
