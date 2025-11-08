@@ -160,6 +160,8 @@ export const initializeDatabase = async () => {
         role ENUM('employer_admin', 'employer_staff') DEFAULT 'employer_admin',
         permissions JSON,
         is_active BOOLEAN DEFAULT FALSE,
+        email_otp VARCHAR(10),
+        otp_expires_at DATETIME,
         last_login TIMESTAMP NULL,
         login_history JSON,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -224,6 +226,7 @@ export const initializeDatabase = async () => {
           
           questions JSON,
           
+          postedBy VARCHAR(255),
           Status ENUM('active', 'draft', 'disable') DEFAULT 'draft',
           FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -260,6 +263,7 @@ export const initializeDatabase = async () => {
           addResponseCode VARCHAR(255),
           AboutCompany TEXT,
           
+          postedBy VARCHAR(255),
           Status ENUM('active', 'draft', 'disable') DEFAULT 'draft',
           FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -3,6 +3,7 @@ import internshipJobsServices from '../services/internshipJobsServices.js';
 export const createInternshipJobsController = async (req, res) => {
   try {
     const user = req.user;
+    console.log('REQ.USER', req.user);
 
     const {
       internshipTitle,
@@ -25,6 +26,8 @@ export const createInternshipJobsController = async (req, res) => {
       receivedResponseOverMail,
       addResponseCode,
       AboutCompany,
+      postedBy,
+      Status,
     } = req.body;
 
     // base payload
@@ -50,6 +53,8 @@ export const createInternshipJobsController = async (req, res) => {
       receivedResponseOverMail,
       addResponseCode,
       AboutCompany,
+      postedBy: user.email,
+      Status,
     };
 
     // role-based assignment
@@ -80,7 +85,11 @@ export const ListAllInternshipJobsController = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const { jobs, total } = await internshipJobsServices.listAllInternship(page, limit);
+    // If company_id is passed → dashboard view
+    // If not → client view (all jobs)
+    const companyId = req.user?.company_id || req.query.company_id || null;
+
+    const { jobs, total } = await internshipJobsServices.listAllInternship(page, limit, companyId);
 
     return res.status(200).json({
       message: 'Jobs fetched successfully',

@@ -22,7 +22,7 @@ class Internship {
     receivedResponseOverMail,
     addResponseCode,
     AboutCompany,
-
+    postedBy,
     Status = 'draft',
     company_id,
     employer_id,
@@ -54,6 +54,7 @@ class Internship {
     this.AboutCompany = AboutCompany;
 
     // Status and relationships
+    this.postedBy = postedBy;
     this.Status = Status;
     this.company_id = company_id;
     this.employer_id = employer_id;
@@ -88,6 +89,7 @@ class Internship {
       receivedResponseOverMail: this.receivedResponseOverMail,
       addResponseCode: this.addResponseCode,
       AboutCompany: this.AboutCompany,
+      postedBy: this.postedBy,
       Status: this.Status,
       company_id: this.company_id,
       employer_id: this.employer_id,

@@ -5,8 +5,7 @@ import { Authenticate } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// User applies for a job
-router.post('/:jobId/apply', Authenticate, applyForJobController);
+router.post('/:jobId/apply', Authenticate, applyForJobController); // Apply for job
 
 // Employer views all applications for a job
 router.get('/:jobId/all-applications', Authenticate, getApplicationsForJob);
