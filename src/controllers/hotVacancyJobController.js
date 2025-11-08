@@ -1,3 +1,6 @@
+// controllers/hotVacancyJobsController.js
+import { getReadPool } from '../config/database.js';
+import hotVacancyJobsQueries from '../queries/hotVacancyJobsQueries.js';
 import hotVacancyJobsServices from '../services/hotVacancyJobsServices.js';
 
 export const createJobsController = async (req, res) => {
@@ -34,6 +37,7 @@ export const createJobsController = async (req, res) => {
 
       // Questions field
       questions,
+      postedBy,
       Status,
     } = req.body;
 
@@ -69,8 +73,10 @@ export const createJobsController = async (req, res) => {
 
       // Questions field
       questions,
+      postedBy: user.email,
       Status,
     };
+    // console.log('REQ.USER', req.user);
 
     // role-based assignment
     if (user.role === 'employer_admin') {
@@ -95,12 +101,17 @@ export const createJobsController = async (req, res) => {
   }
 };
 
+// list all jobs for user
 export const ListAllJobsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
 
-    const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit);
+    // If company_id is passed → dashboard view
+    // If not → client view (all jobs)
+    const companyId = req.user?.company_id || req.query.company_id || null;
+
+    const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit, companyId);
 
     return res.status(200).json({
       message: 'Jobs fetched successfully',
@@ -112,6 +123,70 @@ export const ListAllJobsController = async (req, res) => {
   } catch (error) {
     console.error('ListAllJobsController error:', error);
     return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// list all jobs for employer
+export const getEmployerJobsController = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user.company_id) return res.status(400).json({ message: 'Missing company id for employer' });
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit, user.company_id, true);
+
+    res.status(200).json({
+      message: 'Jobs fetched successfully',
+      total,
+      jobs, // includes total_responses count for each job
+    });
+  } catch (error) {
+    console.error('getEmployerJobsController error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// When employer clicks a specific job → show full responses + user profiles
+export const getSingleJobWithApplicationsController = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const user = req.user; // from Authenticate middleware
+
+    //First fetch the job company_id for access control
+    const [jobCheck] = await getReadPool().query(`SELECT company_id FROM HotVacancyJobs WHERE job_id = ?`, [jobId]);
+
+    if (!jobCheck.length) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const jobCompanyId = jobCheck[0].company_id;
+
+    // Allow only if the employer belongs to the same company
+    if (user.role.startsWith('employer') && user.company_id !== jobCompanyId) {
+      return res.status(403).json({
+        message: 'Unauthorized: you do not have access to this job',
+      });
+    }
+
+    // Now fetch job + applications (since access is verified)
+    const job = await hotVacancyJobsQueries.getJobWithApplications(jobId, user.company_id);
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    res.status(200).json({
+      message: 'Job details with applications fetched successfully',
+      job,
+    });
+  } catch (error) {
+    console.error('getSingleJobWithApplicationsController error:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message,
+    });
   }
 };
 
@@ -133,6 +208,7 @@ export const getJobsByIdController = async (req, res) => {
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 export const updateJobsController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -170,32 +246,3 @@ export const deleteJobsController = async (req, res) => {
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
-// import JobPostQueries from '../queries/JobPostQueries.js';
-
-// class jobService {
-//   async createJobs(jobsData) {
-//     const job = await JobPostQueries.create(jobsData);
-//     return job;
-//   }
-
-//   async listAllJobs(page, limit) {
-//     return await JobPostQueries.getAllJobs(page, limit);
-//   }
-
-//   async JobById(id) {
-//     const job = await JobPostQueries.getJobById(id);
-//     return job;
-//   }
-
-//   async updateJob(id, updateData) {
-//     const job = await JobPostQueries.updateJobById(id, updateData);
-//     return job;
-//   }
-
-//   async deleteJob(id) {
-//     return await JobPostQueries.deleteJobById(id);
-//   }
-// }
-
-// export default new jobService();

@@ -10,6 +10,7 @@ import {
   updateUser,
 } from '../controllers/employerController.js';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
+import { getReadPool } from '../config/database.js';
 
 const router = express.Router();
 

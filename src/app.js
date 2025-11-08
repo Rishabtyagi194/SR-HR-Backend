@@ -14,7 +14,7 @@ import internshipJobsRoutes from './routes/internshipJobsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import uploadExcel from './routes/uploadRoutes.js';
 import jobApplication from './routes/jobApplicationRoutes.js';
-
+import otpRoutes from './routes/otpVerificationRoutes.js';
 const app = express();
 
 // app.use(helmet());
@@ -43,4 +43,5 @@ app.use('/api/jobs', hotVacancyJobsRoutes);
 app.use('/api/internship', internshipJobsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', uploadExcel);
+app.use('/otp', otpRoutes);
 export default app;

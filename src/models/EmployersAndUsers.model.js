@@ -9,7 +9,7 @@ class EmployerUser {
     this.phone = row.phone;
     this.role = row.role;
     this.permissions = row.permissions ? JSON.parse(row.permissions) : null;
-    this.isActive = row.is_active === 1;
+    this.isActive = row.is_active;
 
     try {
       this.loginHistory = row.login_history ? JSON.parse(row.login_history) : [];

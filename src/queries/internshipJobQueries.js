@@ -8,13 +8,13 @@ class internshipQueries {
 
     const sql = `
     INSERT INTO InternshipJobs (
-company_id, employer_id, staff_id, internshipTitle, employmentType,
-duration, internshipStartDate, OfferStipend, workMode,
-intershipLocation, willingToRelocate, CompanyIndustry, perksAndBenefit,
-noOfVacancies, skills, qualification, videoProfile, jobDescription,
-lastDateToApply, collabrateWithTeam, receivedResponseOverMail,
-addResponseCode, AboutCompany, Status
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      company_id, employer_id, staff_id, internshipTitle, employmentType,
+      duration, internshipStartDate, OfferStipend, workMode,
+      intershipLocation, willingToRelocate, CompanyIndustry, perksAndBenefit,
+      noOfVacancies, skills, qualification, videoProfile, jobDescription,
+      lastDateToApply, collabrateWithTeam, receivedResponseOverMail,
+      addResponseCode, AboutCompany, postedBy, Status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -41,15 +41,16 @@ addResponseCode, AboutCompany, Status
       dbObject.receivedResponseOverMail,
       dbObject.addResponseCode,
       dbObject.AboutCompany,
+      dbObject.postedBy,
       dbObject.Status || 'draft',
     ];
 
     if (values.includes(undefined)) {
-      console.error('⚠️ Undefined value found in insert:', values);
+      console.error('Undefined value found in insert:', values);
       throw new Error('One or more required fields are undefined');
     }
 
-    console.log('🧠 Insert values:', dbObject);
+    // console.log('Insert values:', dbObject);
 
     const [result] = await getWritePool().execute(sql, values);
 
@@ -57,14 +58,39 @@ addResponseCode, AboutCompany, Status
     return await this.getInternshipById(result.insertId);
   }
 
-  async allInternship(page = 1, limit = 10) {
+  async allInternship(page = 1, limit = 10, companyId = null) {
     const offset = (page - 1) * limit;
 
-    // paginated jobs
-    const [rows] = await getReadPool().query(`SELECT * FROM InternshipJobs ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`);
+    let rows, total;
 
-    //total jobs
-    const [[{ total }]] = await getReadPool().execute(`SELECT COUNT(*) as total FROM InternshipJobs`);
+    if (companyId) {
+      // Dashboard → only jobs for that organization
+      [rows] = await getReadPool().query(
+        `SELECT * FROM InternshipJobs 
+        WHERE company_id = ? 
+        ORDER BY created_at DESC 
+        LIMIT ? OFFSET ?`,
+        [companyId, limit, offset],
+      );
+
+      //total jobs
+      [[{ total }]] = await getReadPool().execute(
+        `
+        SELECT COUNT(*) as total FROM InternshipJobs WHERE company_id = ?`,
+        [companyId],
+      );
+    } else {
+      // Client side → all jobs
+
+      [rows] = await getReadPool().query(
+        `SELECT * FROM InternshipJobs 
+        ORDER BY created_at DESC 
+        LIMIT ? OFFSET ?`,
+        [limit, offset],
+      );
+
+      [[{ total }]] = await getReadPool().execute(`SELECT COUNT(*) as total FROM InternshipJobs`);
+    }
 
     return { jobs: rows, total };
   }

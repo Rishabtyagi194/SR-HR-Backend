@@ -158,7 +158,7 @@ export const getExperiences = async (req, res) => {
 export const updateExperience = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('id', id);
+    // console.log('id', id);
 
     await UserService.updateExperience(req.user.id, id, req.body);
     res.json({ message: 'Experience updated successfully' });
@@ -201,9 +201,9 @@ export const getSkills = async (req, res) => {
 
 export const updateSkill = async (req, res) => {
   try {
-    console.log(' Params:', req.params);
-    console.log(' User:', req.user);
-    console.log(' Body:', req.body);
+    // console.log(' Params:', req.params);
+    // console.log(' User:', req.user);
+    // console.log(' Body:', req.body);
 
     await UserService.updateSkill(req.user.id, req.params.id, req.body);
     res.json({ message: 'Skill updated successfully' });
