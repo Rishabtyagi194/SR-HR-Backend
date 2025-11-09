@@ -2,8 +2,8 @@
 import { getReadPool, getWritePool } from '../config/database.js';
 import EmployerUser from '../models/EmployersAndUsers.model.js';
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 import { sendEmail } from '../utils/sendEmail.js';
+import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
 
 class EmployerQueries {
   // Create employer user
@@ -11,7 +11,7 @@ class EmployerQueries {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
 
     // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = generateOTP();
     const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // expires in 15 mins
 
     const values = [
@@ -35,15 +35,7 @@ class EmployerQueries {
       values,
     );
 
-    // Send OTP Email
-    const emailHtml = `
-      <h2>Verify your email</h2>
-      <p>Your OTP for verifying your employer account is:</p>
-      <h1 style="letter-spacing:3px;">${otp}</h1>
-      <p>This OTP will expire in 15 minutes.</p>
-    `;
-
-    await sendEmail(userData.email, 'Your RozgarDwar Verification OTP', emailHtml);
+    await sendVerificationOTP(userData.email, otp);
 
     return {
       id: result.insertId,

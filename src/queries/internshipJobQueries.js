@@ -1,5 +1,6 @@
 import { getReadPool, getWritePool } from '../config/database.js';
 import Internship from '../models/internship.model.js';
+import { jobApplicationQueries } from './jobApplicationQueries.js';
 
 class internshipQueries {
   async create(jobsdata) {
@@ -58,7 +59,7 @@ class internshipQueries {
     return await this.getInternshipById(result.insertId);
   }
 
-  async allInternship(page = 1, limit = 10, companyId = null) {
+  async allInternship(page = 1, limit = 10, companyId = null, includeApplications = false) {
     const offset = (page - 1) * limit;
 
     let rows, total;
@@ -92,7 +93,56 @@ class internshipQueries {
       [[{ total }]] = await getReadPool().execute(`SELECT COUNT(*) as total FROM InternshipJobs`);
     }
 
+    // attach total responses
+    if (includeApplications && rows.length > 0) {
+      const jobIds = rows.map((j) => j.job_id);
+      const [counts] = await getReadPool().query(jobApplicationQueries.getApplicationsCountByJobIds, [jobIds]);
+
+      // convert to map for fast lookup
+      const countMap = {};
+      for (const c of counts) countMap[c.job_id] = c.total_applications;
+
+      // attach counts
+      for (const job of rows) {
+        job.total_applications = countMap[job.job_id] || 0;
+      }
+    }
+
     return { jobs: rows, total };
+  }
+
+  async getInternshipWithApplications(jobId, companyId = null) {
+    // fetch job
+    const [internshipRows] = companyId
+      ? await getReadPool().query(`SELECT * FROM InternshipJobs WHERE job_id = ? AND company_id = ?`, [jobId, companyId])
+      : await getReadPool().query(`SELECT * FROM InternshipJobs WHERE job_id = ?`, [jobId]);
+
+    if (!internshipRows.length) return null;
+    const job = internshipRows[0];
+
+    // fetch applications + user data
+    const [applications] = await getReadPool().query(jobApplicationQueries.getApplicationsWithFullUserDataByInternshipJobId, [jobId]);
+
+    for (const app of applications) {
+      const [answers] = await getReadPool().query(jobApplicationQueries.getAnswersByApplicationId, [app.application_id]);
+
+      app.answers = answers.map((a) => ({
+        question: a.question_text,
+        answer: JSON.parse(a.answer_text || '""'),
+      }));
+
+      // Full profile
+      const [educations] = await getReadPool().query(jobApplicationQueries.getUserEducations, [app.user_id]);
+      const [experiences] = await getReadPool().query(jobApplicationQueries.getUserExperiences, [app.user_id]);
+      const [skills] = await getReadPool().query(jobApplicationQueries.getUserSkills, [app.user_id]);
+
+      app.profile = { educations, experiences, skills };
+    }
+
+    job.applications = applications;
+    job.total_applications = applications.length;
+
+    return job;
   }
 
   async getInternshipById(id, useMaster = false) {

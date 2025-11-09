@@ -60,9 +60,9 @@ export const dropSingleTable = async (tableName) => {
 
     connection.release();
 
-    console.log(`✅ Dropped table: ${tableName}`);
+    console.log(`Dropped table: ${tableName}`);
   } catch (error) {
-    console.error(`❌ Error dropping table ${tableName}:`, error);
+    console.error(`Error dropping table ${tableName}:`, error);
     throw error;
   }
 };

@@ -1,10 +1,14 @@
 import { getReadPool, getWritePool } from '../config/database.js';
+import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
 import employerStaffModel from '../models/EmployersAndUsers.model.js';
 import bcrypt from 'bcrypt';
 
 class StaffQueries {
   async create(staffData) {
     const hashedPassword = await bcrypt.hash(staffData.password, 10);
+
+    const otp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
     const values = [
       staffData.company_id ?? null,
@@ -15,17 +19,23 @@ class StaffQueries {
       staffData.phone,
       staffData.role || 'employer_staff',
       staffData.permissions ? JSON.stringify(staffData.permissions) : null,
-      staffData.isActive || 1,
+      staffData.isActive || 0,
+      otp,
+      otpExpiresAt,
     ];
 
     const [result] = await getWritePool().execute(
       `INSERT INTO employer_users 
-       (company_id, employer_id, name, email, password, phone, role, permissions, is_active) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (company_id, employer_id, name, email, password, phone, role, permissions, is_active, email_otp, otp_expires_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       values,
     );
 
+    // Send OTP email
+    await sendVerificationOTP(staffData.email, otp);
+
     return {
+      message: 'Verififcation OTP sent to email. Please verify your email.',
       id: result.insertId,
       company_id: staffData.company_id,
       employer_id: staffData.employer_id,
@@ -34,7 +44,7 @@ class StaffQueries {
       phone: staffData.phone,
       role: staffData.role || 'employer_staff',
       permissions: staffData.permissions || null,
-      isActive: staffData.isActive || true,
+      isActive: staffData.isActive || false,
       loginHistory: [],
     };
   }

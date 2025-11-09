@@ -1,3 +1,4 @@
+
 // config/database.js
 import mysql from 'mysql2/promise';
 
@@ -280,9 +281,7 @@ export const initializeDatabase = async () => {
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
         role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
-        email_otp VARCHAR(10),
-        otp_expires_at DATETIME,
-        is_active BOOLEAN DEFAULT FALSE,
+        is_active BOOLEAN DEFAULT TRUE,
         last_login TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -451,3 +450,85 @@ export default {
   getReadPool,
   initializeDatabase,
 };
+
+
+
+
+**********************************************************************************
+
+
+show databases;
+DROP database rozgar_qa;
+use rozgar_qa;
+
+show tables;
+
+SELECT * FROM admins;
+
+-- DELETE FROM admins where id =1;
+
+-- SELECT VERSION();
+
+SELECT * FROM employer_users;
+
+-- TRUNCATE TABLE employer_users;
+
+-- ALTER TABLE employer_users
+-- ADD COLUMN verificationToken VARCHAR(255);
+
+-- DELETE FROM employer_users where id = 2;
+
+SELECT * FROM companies;
+-- DELETE FROM companies where id = 1;
+
+SELECT * FROM HotVacancyJobs;
+
+-- SHOW CREATE TABLE HotVacancyJobs;
+
+-- DESC HotVacancyJobs;
+
+SELECT * FROM internshipjobs;
+
+-- DROP TABLE HotVacancyJobs;
+
+
+SELECT * FROM job_applications;
+
+SELECT * FROM job_application_answers;
+
+-- DROP TABLE job_applications;
+-- DROP TABLE job_application_answers;
+
+
+SELECT * FROM users;
+
+-- DELETE FROM users where id = 1;
+
+SELECT * FROM user_education;
+SELECT * FROM user_experience;
+SELECT * FROM user_profiles;
+
+-- ALTER TABLE user_profiles ADD COLUMN resume_public_id VARCHAR(255);
+
+SELECT * FROM user_skills;
+SELECT * FROM user_logs;
+SELECT * FROM employee_data_uploads;
+
+-- testing indexing
+SHOW INDEXES FROM user_skills;
+SELECT * FROM user_skills WHERE skill_name = 'react.js';
+EXPLAIN SELECT * FROM user_skills WHERE skill_name = 'react.js';
+
+-- Drop table user_skills;
+
+-- ALTER TABLE user_profiles
+-- ADD COLUMN profile_completion INT DEFAULT 0;
+
+-- ALTER TABLE user_skills
+-- RENAME COLUMN proficiency TO proficiency_level; 
+
+-- DROP TABLE user_skills;
+
+
+SELECT * FROM HotVacancyJobs;
+SELECT COUNT(*) as total FROM HotVacancyJobs;
