@@ -1,3 +1,5 @@
+import { getReadPool } from '../config/database.js';
+import internshipJobQueries from '../queries/internshipJobQueries.js';
 import internshipJobsServices from '../services/internshipJobsServices.js';
 
 export const createInternshipJobsController = async (req, res) => {
@@ -71,7 +73,7 @@ export const createInternshipJobsController = async (req, res) => {
     const result = await internshipJobsServices.createInternship(jobPayload);
 
     return res.status(201).json({
-      message: 'Successfully posted job',
+      message: 'Successfully posted a Internship',
       job: result,
     });
   } catch (error) {
@@ -101,6 +103,70 @@ export const ListAllInternshipJobsController = async (req, res) => {
   } catch (error) {
     console.error('ListAllJobsController error:', error);
     return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// list all jobs for employer
+export const getEmployerInternshipController = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user.company_id) return res.status(400).json({ message: 'Missing company id for employer' });
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const { jobs, total } = await internshipJobsServices.listAllInternship(page, limit, user.company_id, true);
+
+    res.status(200).json({
+      message: 'Internship fetched successfully',
+      total,
+      jobs, // includes total_responses count for each job
+    });
+  } catch (error) {
+    console.error('getEmployerInternshipController error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// When employer clicks a specific job → show full responses + user profiles
+export const getSingleInternshipWithApplicationsController = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const user = req.user; // from Authenticate middleware
+
+    //First fetch the job company_id for access control
+    const [internshipCheck] = await getReadPool().query(`SELECT company_id FROM InternshipJobs WHERE job_id = ?`, [jobId]);
+
+    if (!internshipCheck.length) {
+      return res.status(404).json({ message: 'Internship not found' });
+    }
+
+    const jobCompanyId = internshipCheck[0].company_id;
+
+    // Allow only if the employer belongs to the same company
+    if (user.role.startsWith('employer') && user.company_id !== jobCompanyId) {
+      return res.status(403).json({
+        message: 'Unauthorized: you do not have access to this job',
+      });
+    }
+
+    // Now fetch job + applications (since access is verified)
+    const job = await internshipJobQueries.getInternshipWithApplications(jobId, user.company_id);
+
+    if (!job) {
+      return res.status(404).json({ message: 'Internship not found' });
+    }
+
+    res.status(200).json({
+      message: 'Internship details with applications fetched successfully',
+      job,
+    });
+  } catch (error) {
+    console.error('getSingleInternshipWithApplicationsController error:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message,
+    });
   }
 };
 

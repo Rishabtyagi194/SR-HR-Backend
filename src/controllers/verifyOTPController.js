@@ -1,102 +1,74 @@
 import { getReadPool, getWritePool } from '../config/database.js';
+import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
 
-// router.post('/verify-otp',
-
+// POST /api/auth/verify-otp
 export const verifyOTP = async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp, role } = req.body;
 
-  if (!email || !otp) {
-    return res.status(400).json({ message: 'Email and OTP required' });
-  }
+  if (!email || !otp || !role) return res.status(400).json({ message: 'Email, OTP, and role are required.' });
+
+  // Proper condition
+  const table = role === 'employer_admin' || role === 'employer_staff' ? 'employer_users' : 'users';
 
   try {
-    const [rows] = await getReadPool().execute('SELECT * FROM employer_users WHERE email = ?', [email]);
-
-    if (rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid email' });
-    }
+    const [rows] = await getReadPool().execute(`SELECT * FROM ${table} WHERE email = ?`, [email]);
+    if (!rows.length) return res.status(400).json({ message: 'Invalid email.' });
 
     const user = rows[0];
 
-    if (user.is_active) {
-      return res.status(400).json({ message: 'Account already verified' });
-    }
+    if (user.is_active) return res.status(400).json({ message: 'Account already verified.' });
 
-    if (user.email_otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
-    }
+    if (user.email_otp !== otp) return res.status(400).json({ message: 'Invalid OTP.' });
 
-    if (new Date() > new Date(user.otp_expires_at)) {
-      return res.status(400).json({ message: 'OTP expired' });
-    }
+    if (new Date() > new Date(user.otp_expires_at)) return res.status(400).json({ message: 'OTP expired.' });
 
-    // Mark verified
-    await getWritePool().execute('UPDATE employer_users SET is_active = ?, email_otp = NULL, otp_expires_at = NULL WHERE id = ?', [
-      true,
-      user.id,
-    ]);
+    await getWritePool().execute(`UPDATE ${table} SET is_active = 1, email_otp = NULL, otp_expires_at = NULL WHERE id = ?`, [user.id]);
 
-    res.status(200).json({ message: 'Email verified successfully' });
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully. You can now log in.',
+    });
   } catch (error) {
     console.error('Error verifying OTP:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-// router.post('/resend-otp',
+// POST /api/auth/resend-otp
 export const resendOTP = async (req, res) => {
-  const { email } = req.body;
+  const { email, role } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
-  }
+  if (!email || !role) return res.status(400).json({ message: 'Email and role are required.' });
+
+  const table = role === 'employer_admin' || role === 'employer_staff' ? 'employer_users' : 'users';
 
   try {
-    const [rows] = await connection.execute('SELECT * FROM employer_users WHERE email = ?', [email]);
-
-    if (rows.length === 0) {
-      return res.status(400).json({ message: 'No account found with this email' });
-    }
+    const [rows] = await getReadPool().execute(`SELECT * FROM ${table} WHERE email = ?`, [email]);
+    if (!rows.length) return res.status(400).json({ message: 'Account not found.' });
 
     const user = rows[0];
 
-    if (user.is_active) {
-      return res.status(400).json({ message: 'Account is already verified' });
-    }
+    if (user.is_active) return res.status(400).json({ message: 'Account already verified.' });
 
-    // Optional: prevent OTP spam (cooldown: 60 seconds)
+    // Prevent spam (60s cooldown)
     if (user.otp_expires_at) {
-      const lastOtpTime = new Date(user.otp_expires_at).getTime() - 15 * 60 * 1000; // OTP created 15 min before expiry
-      const now = Date.now();
-      if (now - lastOtpTime < 60 * 1000) {
+      const lastOtpTime = new Date(user.otp_expires_at).getTime() - 15 * 60 * 1000;
+      if (Date.now() - lastOtpTime < 60 * 1000)
         return res.status(429).json({
-          message: 'Please wait at least 60 seconds before requesting another OTP',
+          message: 'Please wait 60 seconds before requesting another OTP.',
         });
-      }
     }
 
-    // Generate new OTP
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // valid for 15 min
+    const newOtp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Update OTP in DB
-    await connection.execute('UPDATE employer_users SET email_otp = ?, otp_expires_at = ? WHERE email = ?', [newOtp, otpExpiresAt, email]);
+    await getWritePool().execute(`UPDATE ${table} SET email_otp = ?, otp_expires_at = ? WHERE email = ?`, [newOtp, otpExpiresAt, email]);
 
-    // Send OTP Email
-    const html = `
-      <h2>Your new OTP code</h2>
-      <p>Use the OTP below to verify your account:</p>
-      <h1 style="letter-spacing:3px;">${newOtp}</h1>
-      <p>This OTP will expire in 15 minutes.</p>
-    `;
+    await sendVerificationOTP(email, newOtp);
 
-    await sendEmail(email, 'RozgarDwar - New OTP Verification Code', html);
-
-    res.status(200).json({
-      message: 'A new OTP has been sent to your email.',
-    });
+    res.status(200).json({ success: true, message: 'New OTP sent successfully.' });
   } catch (error) {
     console.error('Error resending OTP:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };

@@ -7,6 +7,7 @@ export default class User {
     phone,
     created_at,
     updated_at,
+    is_active,
     // Profile fields
     dob = null,
     gender = null,
@@ -34,7 +35,7 @@ export default class User {
     this.phone = phone;
     this.created_at = created_at;
     this.updated_at = updated_at;
-
+    this.is_active = is_active === 1 || is_active === false;
     this.dob = dob;
     this.gender = gender;
     this.address = address;

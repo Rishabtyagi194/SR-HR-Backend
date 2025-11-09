@@ -3,16 +3,14 @@ import { getReadPool, getWritePool } from '../config/database.js';
 import User from '../models/User.model.js';
 
 class UserQueries {
-  async create({ full_name, email, password, phone }) {
-    const [result] = await getWritePool().execute(
-      `INSERT INTO users (full_name, email, password, phone, created_at) VALUES (?, ?, ?, ?, NOW())`,
-      [full_name, email, password, phone || null],
-    );
-    return this.findById(result.insertId, true);
-  }
-
   async findByEmail(email) {
-    const [rows] = await getReadPool().execute(`SELECT * FROM users WHERE email = ? LIMIT 1`, [email]);
+    const [rows] = await getReadPool().execute(
+      `SELECT id, full_name, email, password, phone, role, is_active, created_at, updated_at 
+     FROM users 
+     WHERE email = ? 
+     LIMIT 1`,
+      [email],
+    );
     return rows.length ? new User(rows[0]) : null;
   }
 

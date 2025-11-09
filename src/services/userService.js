@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { getReadPool, getWritePool } from '../config/database.js';
 import UserQueries from '../queries/userQueries.js';
+import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
 
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || '10', 10);
 const JWT_SECRET = process.env.JWT_SECRET || 'abfa477a5f71155408d7e69fcc35abc378';
@@ -14,18 +15,22 @@ class UserService {
     if (existing) throw new Error('Email already registered');
 
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+    const otp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min validity
 
     const conn = await getWritePool().getConnection();
     try {
       await conn.beginTransaction();
 
+      // Insert user record
       const [ins] = await conn.execute(
-        `INSERT INTO users (full_name, email, password, phone, created_at)
-         VALUES (?, ?, ?, ?, NOW())`,
-        [full_name, email, hashed, phone || null],
+        `INSERT INTO users (full_name, email, password, phone, email_otp, otp_expires_at, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+        [full_name, email, hashed, phone || null, otp, otpExpiresAt],
       );
       const userId = ins.insertId;
 
+      // Initialize empty profile
       await conn.execute(
         `INSERT INTO user_profiles (user_id, created_at, updated_at)
          VALUES (?, NOW(), NOW())`,
@@ -33,7 +38,15 @@ class UserService {
       );
 
       await conn.commit();
-      return { user_id: userId };
+
+      // Send OTP email
+      await sendVerificationOTP(email, otp);
+
+      return {
+        user_id: userId,
+        email,
+        message: 'Verififcation OTP sent to email. Please verify your email.',
+      };
     } catch (err) {
       await conn.rollback();
       throw err;
@@ -42,21 +55,74 @@ class UserService {
     }
   }
 
-  //  ---------------------------- Login ---------------------------
-
+  //  Login only if verified (is_active = true)
   async login({ email, password }) {
     const user = await UserQueries.findByEmail(email);
+    console.log('user', user);
+    console.log('user.is_active', user.is_active);
+
     if (!user) throw new Error('Invalid credentials');
+
+    if (!user.is_active) throw new Error('Email not verified. Please verify your account before logging in.');
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) throw new Error('Invalid credentials');
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role || 'job_seeker' }, JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 
     return { token, user };
   }
+
+  // async register({ full_name, email, password, phone }) {
+  //   const existing = await UserQueries.findByEmail(email);
+  //   if (existing) throw new Error('Email already registered');
+
+  //   const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+
+  //   const conn = await getWritePool().getConnection();
+  //   try {
+  //     await conn.beginTransaction();
+
+  //     const [ins] = await conn.execute(
+  //       `INSERT INTO users (full_name, email, password, phone, created_at)
+  //        VALUES (?, ?, ?, ?, NOW())`,
+  //       [full_name, email, hashed, phone || null],
+  //     );
+  //     const userId = ins.insertId;
+
+  //     await conn.execute(
+  //       `INSERT INTO user_profiles (user_id, created_at, updated_at)
+  //        VALUES (?, NOW(), NOW())`,
+  //       [userId],
+  //     );
+
+  //     await conn.commit();
+  //     return { user_id: userId };
+  //   } catch (err) {
+  //     await conn.rollback();
+  //     throw err;
+  //   } finally {
+  //     conn.release();
+  //   }
+  // }
+
+  // //  ---------------------------- Login ---------------------------
+
+  // async login({ email, password }) {
+  //   const user = await UserQueries.findByEmail(email);
+  //   if (!user) throw new Error('Invalid credentials');
+
+  //   const ok = await bcrypt.compare(password, user.password);
+  //   if (!ok) throw new Error('Invalid credentials');
+
+  //   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+  //     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  //   });
+
+  //   return { token, user };
+  // }
 
   //  ---------------------------- Profile ---------------------------
   async getProfile(userId) {

@@ -121,7 +121,7 @@ class jobQueries {
     const job = jobRows[0];
 
     // fetch applications + user data
-    const [applications] = await getReadPool().query(jobApplicationQueries.getApplicationsWithFullUserDataByJobId, [jobId]);
+    const [applications] = await getReadPool().query(jobApplicationQueries.getApplicationsWithFullUserDataByHotVacancyJobId, [jobId]);
 
     for (const app of applications) {
       const [answers] = await getReadPool().query(jobApplicationQueries.getAnswersByApplicationId, [app.application_id]);

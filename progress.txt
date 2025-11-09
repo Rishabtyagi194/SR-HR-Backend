@@ -1,1 +1,14 @@
+
+Done:
+
+1. Employer can register his company 
+2. Employer can post hot vacancy and internship 
+3. Employer can see all vaancies within the company
+4. user can register / login
+5. User can Apply on any hot vacancy and internship
+6. Employer can see al jobs for a particular job
+
+
+
+
 resume upload is not working 
