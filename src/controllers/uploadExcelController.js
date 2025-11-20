@@ -1,4 +1,4 @@
-import uploadService from '../services/uploadService.js';
+import uploadService from '../services/uploadExcelService.js';
 
 export const uploadEmployeeData = async (req, res) => {
   try {

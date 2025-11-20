@@ -1,4 +1,3 @@
-
 // config/database.js
 import mysql from 'mysql2/promise';
 
@@ -109,7 +108,7 @@ export const initializeDatabase = async () => {
     //   )
     // `);
 
-    //  Admins
+    //  Admins users
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS admins (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -148,7 +147,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    //  Employer users
+    //  Employer users and its sub user
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS employer_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -272,7 +271,9 @@ export const initializeDatabase = async () => {
         )
     `);
 
-    //  Full Database Schema (Users)
+    //  *******************  For users (client) ****************************
+
+    // all users
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -281,7 +282,9 @@ export const initializeDatabase = async () => {
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
         role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
-        is_active BOOLEAN DEFAULT TRUE,
+        email_otp VARCHAR(10),
+        otp_expires_at DATETIME,
+        is_active BOOLEAN DEFAULT FALSE,
         last_login TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -290,6 +293,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
+    // user profile
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_profiles (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -318,6 +322,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
+    // users educations
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_education (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -333,6 +338,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
+    // user experience
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_experience (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -348,6 +354,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
+    // users skills
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_skills (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -360,7 +367,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // JObs applications
+    // JObs applications/response
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS job_applications (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -388,6 +395,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
+    // JObs applications/response answer
     await connection.execute(`
          CREATE TABLE IF NOT EXISTS job_application_answers (
           id INT AUTO_INCREMENT PRIMARY KEY,
@@ -398,9 +406,9 @@ export const initializeDatabase = async () => {
         )
       `);
 
-    // upload data excel Table
+    // upload data by employer, excel docs
     await connection.execute(`
-      CREATE TABLE IF NOT EXISTS employee_data_uploads (
+      CREATE TABLE IF NOT EXISTS Excel_data_uploads (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         company_id INT NOT NULL,
         uploaded_by INT NOT NULL,
@@ -430,12 +438,63 @@ export const initializeDatabase = async () => {
     `);
 
     /*
-      🔹 Redis integration tip (optional for scale):
+        Redis integration tip :
       - Use Redis for real-time logs or activity caching:
         await redis.lPush(`user:${userId}:logs`, JSON.stringify({ action: 'login', time: Date.now() }));
       - Keep MySQL logs for permanent storage and audits.
     */
 
+    // ***************** Employer upload resume on dashboard **********************
+
+    await connection.execute(`
+        CREATE TABLE IF NOT EXISTS resumes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        phone VARCHAR(50) NOT NULL UNIQUE,
+        file_path VARCHAR(500),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_email_phone (email, phone)
+      );
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS resume_skills (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        resume_id INT NOT NULL,
+        skill_name VARCHAR(255) NOT NULL,
+        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE,
+        INDEX idx_resume_id (resume_id),
+        INDEX idx_skill_name (skill_name)      
+      );
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS resume_education (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        resume_id INT NOT NULL,
+        degree VARCHAR(255),
+        institution VARCHAR(255),
+        year VARCHAR(50),
+        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE,
+        INDEX idx_resume_id (resume_id)
+      );
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS resume_experience (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        resume_id INT NOT NULL,
+        company VARCHAR(255),
+        position VARCHAR(255),
+        duration VARCHAR(100),
+        description TEXT,
+        FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE,
+        INDEX idx_resume_id (resume_id)
+      );
+    `);
+
+    // **************************************************************************
     connection.release();
     console.log('All database tables initialized successfully.');
   } catch (error) {
@@ -512,7 +571,7 @@ SELECT * FROM user_profiles;
 
 SELECT * FROM user_skills;
 SELECT * FROM user_logs;
-SELECT * FROM employee_data_uploads;
+SELECT * FROM Excel_data_uploads;
 
 -- testing indexing
 SHOW INDEXES FROM user_skills;

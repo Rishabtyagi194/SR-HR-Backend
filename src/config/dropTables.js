@@ -22,10 +22,15 @@ export const dropAllTables = async () => {
       // 'user_experience',
       // 'user_skills',
       // 'user_applications',
-      // 'employee_data_uploads',
+      'Excel_data_uploads',
       // 'user_logs',
       // 'job_application_answers',
       // 'job_applications',
+      // 'resume',
+      // 'resumes1',
+      // 'resume_skills',
+      // 'resume_education',
+      // 'resume_experience',
     ];
 
     for (const table of tables) {

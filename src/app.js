@@ -12,19 +12,21 @@ import employerRoutes from './routes/employerRoutes.js';
 import hotVacancyJobsRoutes from './routes/hotVacancyJobsRoutes.js';
 import internshipJobsRoutes from './routes/internshipJobsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import uploadExcel from './routes/uploadRoutes.js';
+import uploadExcel from './routes/uploadExcelRoutes.js';
 import jobApplication from './routes/jobApplicationRoutes.js';
 import otpRoutes from './routes/otpVerificationRoutes.js';
+import uploadResume from './routes/resumeRoutes.js';
 const app = express();
 
 // app.use(helmet());
-app.use(cors());
-// app.use(
-//   cors({
-//     origin: 'https://sr-hrportal.netlify.app',
-//     credentials: true,
-//   }),
-// );
+// app.use(cors());
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    credentials: true,
+  }),
+);
+
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -42,6 +44,7 @@ app.use('/api/jobs/applications', jobApplication);
 app.use('/api/jobs', hotVacancyJobsRoutes);
 app.use('/api/internship', internshipJobsRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api', uploadExcel);
+app.use('/api/resume', uploadResume);
 app.use('/otp', otpRoutes);
+app.use('/api/excel', uploadExcel);
 export default app;

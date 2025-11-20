@@ -2,7 +2,6 @@
 import { getReadPool, getWritePool } from '../config/database.js';
 import EmployerUser from '../models/EmployersAndUsers.model.js';
 import bcrypt from 'bcrypt';
-import { sendEmail } from '../utils/sendEmail.js';
 import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
 
 class EmployerQueries {
