@@ -23,25 +23,25 @@ export const uploadResumeController = async (req, res) => {
 
     // System prompt for GPT-4o-mini
     const systemPrompt = `
-You are a professional resume parser. 
-Extract all relevant structured data from the resume text and return JSON in this exact schema:
+      You are a professional resume parser. 
+      Extract all relevant structured data from the resume text and return JSON in this exact schema:
 
-{
-  "name": "string",
-  "email": "string",
-  "phone": "string",
-  "skills": ["string"],
-  "education": [
-    { "degree": "string", "institution": "string", "year": "string" }
-  ],
-  "experience": [
-    { "company": "string", "position": "string", "duration": "string", "description": "string" }
-  ]
-}
+      {
+        "name": "string",
+        "email": "string",
+        "phone": "string",
+        "skills": ["string"],
+        "education": [
+          { "degree": "string", "institution": "string", "year": "string" }
+        ],
+        "experience": [
+          { "company": "string", "position": "string", "duration": "string", "description": "string" }
+        ]
+      }
 
-Only include relevant professional details. 
-If a field is not found, leave it as an empty array or null.
-`;
+      Only include relevant professional details. 
+      If a field is not found, leave it as an empty array or null.
+      `;
 
     // Ask OpenAI to parse
     const response = await openai.chat.completions.create({

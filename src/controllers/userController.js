@@ -2,6 +2,7 @@ import UserService from '../services/userService.js';
 import { validationResult } from 'express-validator';
 import { deleteFromCloudinary, uploadOnCloudinary } from '../utils/cloudinary.js';
 import { getReadPool } from '../config/database.js';
+import { saveSearchKeyword } from '../services/searchKeywordService.js';
 
 // =================== AUTH ===================
 
@@ -54,6 +55,10 @@ export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const updatedProfile = await UserService.updateProfile(userId, req.body);
+
+    if (req.body.profile_title) {
+      await saveSearchKeyword(userId, req.body.profile_title);
+    }
     res.json({ message: 'Profile updated successfully', data: updatedProfile });
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -558,7 +558,6 @@ SELECT * FROM job_application_answers;
 -- DROP TABLE job_applications;
 -- DROP TABLE job_application_answers;
 
-
 SELECT * FROM users;
 
 -- DELETE FROM users where id = 1;

@@ -273,7 +273,7 @@ export const initializeDatabase = async () => {
 
     //  *******************  For users (client) ****************************
 
-    // all users
+    //  users
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -404,7 +404,7 @@ export const initializeDatabase = async () => {
           answer_text TEXT,
           FOREIGN KEY (application_id) REFERENCES job_applications(id) ON DELETE CASCADE
         )
-      `);
+    `);
 
     // upload data by employer, excel docs
     await connection.execute(`
@@ -491,6 +491,18 @@ export const initializeDatabase = async () => {
         description TEXT,
         FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE,
         INDEX idx_resume_id (resume_id)
+      );
+    `);
+
+    await connection.execute(`
+        CREATE TABLE IF NOT EXISTS search_keywords_history (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        employer_id INT NOT NULL,
+        keyword VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (employer_id) REFERENCES employer_users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_keyword (keyword),
+        INDEX idx_keyword (keyword)
       );
     `);
 

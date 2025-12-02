@@ -1,6 +1,7 @@
 // src/queries/userQueries.js
 import { getReadPool, getWritePool } from '../config/database.js';
 import User from '../models/User.model.js';
+import { saveSearchKeyword } from '../services/searchKeywordService.js';
 
 class UserQueries {
   async findByEmail(email) {
@@ -78,10 +79,15 @@ class UserQueries {
         profile.resume_public_id || null,
       ],
     );
+
+    // Save into Redis + DB
+    if (profile.profile_title) {
+      await saveSearchKeyword(userId, profile.profile_title);
+    }
     return result.insertId;
   }
 
-  // Update full profile
+  // Update full profiles
   async updateProfile(userId, profile = {}) {
     // Filter only allowed columns
     const allowedFields = [

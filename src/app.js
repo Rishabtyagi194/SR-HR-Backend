@@ -16,6 +16,7 @@ import uploadExcel from './routes/uploadExcelRoutes.js';
 import jobApplication from './routes/jobApplicationRoutes.js';
 import otpRoutes from './routes/otpVerificationRoutes.js';
 import uploadResume from './routes/resumeRoutes.js';
+import searchRoutes from './routes/searchFilterRoutes.js';
 const app = express();
 
 // app.use(helmet());
@@ -47,4 +48,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/resume', uploadResume);
 app.use('/otp', otpRoutes);
 app.use('/api/excel', uploadExcel);
+app.use('/api/search', searchRoutes);
+
 export default app;
