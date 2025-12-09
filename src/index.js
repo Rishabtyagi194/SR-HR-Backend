@@ -12,7 +12,7 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       console.log('Server started successfully!');
-      console.log(`Port: http://localhost:${PORT}`);
+      console.log(`Server is listening at: http://localhost:${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV}`);
       console.log(`Database: ${process.env.DB_NAME}`);
     });

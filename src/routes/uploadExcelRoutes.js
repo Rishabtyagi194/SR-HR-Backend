@@ -1,6 +1,6 @@
 import express from 'express';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
-import { deleteRecordById, listUploadedData, updateRecordById, uploadEmployeeData } from '../controllers/uploadController.js';
+import { deleteRecordById, listUploadedData, updateRecordById, uploadEmployeeData } from '../controllers/uploadExcelController.js';
 import upload from '../middleware/fileUploadMiddleware.js';
 
 const router = express.Router();

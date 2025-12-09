@@ -7,3 +7,5 @@ notes.txt
 .env.qa
 .env.prod
 progress.txt
+API curl docs.txt
+mysql.txt
