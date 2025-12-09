@@ -1,4 +1,4 @@
-import uploadService from '../services/uploadService.js';
+import uploadService from '../services/uploadExcelService.js';
 
 export const uploadEmployeeData = async (req, res) => {
   try {
@@ -33,5 +33,30 @@ export const listUploadedData = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Update one record by ID
+export const updateRecordById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body; // fields to update
+
+    const result = await uploadService.updateRecordById(req.user, id, updateData);
+    res.status(200).json({ message: 'Record updated successfully', result });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Delete one record by ID
+export const deleteRecordById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await uploadService.deleteRecordById(req.user, id);
+    res.status(200).json({ message: 'Record deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

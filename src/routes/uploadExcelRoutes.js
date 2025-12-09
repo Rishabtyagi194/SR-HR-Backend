@@ -1,7 +1,6 @@
 import express from 'express';
-import multer from 'multer';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
-import { listUploadedData, uploadEmployeeData } from '../controllers/uploadController.js';
+import { deleteRecordById, listUploadedData, updateRecordById, uploadEmployeeData } from '../controllers/uploadExcelController.js';
 import upload from '../middleware/fileUploadMiddleware.js';
 
 const router = express.Router();
@@ -10,4 +9,7 @@ router.post('/upload', Authenticate, authorizeRoles('employer_admin', 'employer_
 
 router.get('/list', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), listUploadedData);
 
+// Update / Delete individual record by ID
+router.patch('/record/:id', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), updateRecordById);
+router.delete('/record/:id', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), deleteRecordById);
 export default router;

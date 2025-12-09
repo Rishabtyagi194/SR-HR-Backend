@@ -1,5 +1,4 @@
 // src/services/employerService.js
-import employerQueries from '../queries/employerQueries.js';
 import EmployerQueries from '../queries/employerQueries.js';
 import bcrypt from 'bcrypt';
 
@@ -9,6 +8,7 @@ class EmployerService {
     // if (!employer) {
     //   throw new Error('Invalid username or password');
     // }
+
     //  No admin found
     if (!employer) {
       const isEmail = isNaN(username);
@@ -17,7 +17,7 @@ class EmployerService {
     }
     // is account active
     if (!employer.isActive) {
-      throw new Error('Account is inactive. Please contact support.');
+      throw new Error('Your account is not verified. Please contact support.');
     }
 
     // Verify password

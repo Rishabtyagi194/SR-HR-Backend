@@ -2,11 +2,16 @@
 import { getReadPool, getWritePool } from '../config/database.js';
 import EmployerUser from '../models/EmployersAndUsers.model.js';
 import bcrypt from 'bcrypt';
+import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
 
 class EmployerQueries {
   // Create employer user
   async create(userData) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    // Generate 6-digit OTP
+    const otp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // expires in 15 mins
 
     const values = [
       userData.company_id ?? null,
@@ -17,26 +22,30 @@ class EmployerQueries {
       userData.phone ?? null,
       userData.role ?? 'employer_admin',
       userData.permissions ? JSON.stringify(userData.permissions) : null,
-      userData.is_active ? 1 : 0,
+      0, // is_active = false by default
+      otp,
+      otpExpiresAt,
     ];
 
     const [result] = await getWritePool().execute(
       `INSERT INTO employer_users 
-   (company_id, employer_id, name, email, password, phone, role, permissions, is_active) 
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    (company_id, employer_id, name, email, password, phone, role, permissions, is_active, email_otp, otp_expires_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       values,
     );
 
-    // Return numeric ID with minimal info to avoid string conversion issues
+    await sendVerificationOTP(userData.email, otp);
+
     return {
       id: result.insertId,
       company_id: userData.company_id,
       name: userData.name,
       email: userData.email,
       role: userData.role || 'employer_admin',
-      is_active: userData.is_active ? true : false,
+      is_active: false,
     };
   }
+
   // ------------------------------------------------------------
 
   // for login

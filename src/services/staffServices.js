@@ -12,6 +12,7 @@ class StaffService {
     if (existingStaffByPhone) {
       throw new Error('Email/Phone already exists');
     }
+
     return await staffQueries.create(staffData);
   }
 

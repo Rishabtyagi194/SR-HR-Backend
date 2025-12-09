@@ -14,7 +14,7 @@ class CompanyService {
       role: 'employer_admin',
     });
 
-    console.log('company.id, employerUser.id', company.id, employerUser.id);
+    // console.log('company.id, employerUser.id', company.id, employerUser.id);
 
     if (!employerUser || !employerUser.id) {
       throw new Error('Employer user not created correctly');

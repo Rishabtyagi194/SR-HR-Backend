@@ -32,7 +32,8 @@ class Jobs {
     // Questions field
     questions = [],
 
-    Status = 'active',
+    postedBy,
+    Status = 'draft',
     company_id,
     employer_id,
     staff_id,
@@ -72,6 +73,7 @@ class Jobs {
     this.questions = questions;
 
     // Status and relationships
+    this.postedBy = postedBy;
     this.Status = Status;
     this.company_id = company_id;
     this.employer_id = employer_id;
@@ -111,6 +113,7 @@ class Jobs {
       duration_days: this.duration_days,
       contact_number: this.contact_number,
       questions: JSON.stringify(this.questions || []),
+      postedBy: this.postedBy,
       Status: this.Status,
       company_id: this.company_id,
       employer_id: this.employer_id,

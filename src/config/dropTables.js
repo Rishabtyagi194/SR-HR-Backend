@@ -9,19 +9,28 @@ export const dropAllTables = async () => {
 
     // Drop tables in reverse order of dependencies
     const tables = [
-      'employer_users',
-      'companies',
-      'admins',
-      'plan_options',
-      'subscription_categories',
-      'HotVacancyJobs',
-      'users',
-      'user_profiles',
-      'user_education',
-      'user_experience',
-      'user_skills',
-      'user_applications',
-      'user_logs',
+      // 'plan_options',
+      // 'subscription_categories',
+      // 'admins',
+      // 'companies',
+      // 'employer_users',
+      // 'HotVacancyJobs',
+      // 'InternshipJobs',
+      // 'users',
+      // 'user_profiles',
+      // 'user_education',
+      // 'user_experience',
+      // 'user_skills',
+      // 'user_applications',
+      'Excel_data_uploads',
+      // 'user_logs',
+      // 'job_application_answers',
+      // 'job_applications',
+      // 'resume',
+      // 'resumes1',
+      // 'resume_skills',
+      // 'resume_education',
+      // 'resume_experience',
     ];
 
     for (const table of tables) {
@@ -56,9 +65,9 @@ export const dropSingleTable = async (tableName) => {
 
     connection.release();
 
-    console.log(`✅ Dropped table: ${tableName}`);
+    console.log(`Dropped table: ${tableName}`);
   } catch (error) {
-    console.error(`❌ Error dropping table ${tableName}:`, error);
+    console.error(`Error dropping table ${tableName}:`, error);
     throw error;
   }
 };

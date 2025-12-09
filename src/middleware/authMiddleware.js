@@ -13,6 +13,7 @@ export const Authenticate = (req, res, next) => {
       id: payload.id, // employer id
       company_id: payload.company_id, // employer's company id
       role: payload.role,
+      email: payload.email,
     };
     next();
   } catch (err) {

@@ -7,6 +7,7 @@ export default class User {
     phone,
     created_at,
     updated_at,
+    is_active,
     // Profile fields
     dob = null,
     gender = null,
@@ -25,6 +26,7 @@ export default class User {
     notice_period = null,
     expected_salary = null,
     resume_url = null,
+    resume_public_id = null,
   }) {
     this.id = id;
     this.full_name = full_name;
@@ -33,7 +35,7 @@ export default class User {
     this.phone = phone;
     this.created_at = created_at;
     this.updated_at = updated_at;
-
+    this.is_active = is_active === 1 || is_active === false;
     this.dob = dob;
     this.gender = gender;
     this.address = address;
@@ -51,6 +53,7 @@ export default class User {
     this.notice_period = notice_period;
     this.expected_salary = expected_salary;
     this.resume_url = resume_url;
+    this.resume_public_id = resume_public_id;
   }
 
   validateForRegister() {
