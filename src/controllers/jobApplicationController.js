@@ -94,7 +94,7 @@ export const getAllCompanyApplications = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'All company applications fetched successfully',
+      message: 'All applications/response fetched successfully within a company',
       totalApplications: applications.length,
       applications,
     });

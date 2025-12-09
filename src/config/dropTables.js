@@ -22,7 +22,7 @@ export const dropAllTables = async () => {
       // 'user_experience',
       // 'user_skills',
       // 'user_applications',
-      'Excel_data_uploads',
+      // 'Excel_data_uploads',
       // 'user_logs',
       // 'job_application_answers',
       // 'job_applications',

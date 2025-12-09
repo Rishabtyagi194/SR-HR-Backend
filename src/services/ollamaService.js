@@ -8,9 +8,9 @@ export const generateText = async (prompt) => {
       stream: false,
     });
 
-    return response.data.response;
+    return response.data?.response || "";
   } catch (err) {
-    console.error('Ollama error:', err.message);
-    return null;
+    console.error("Ollama error:", err.response?.data || err.message);
+    return "";
   }
 };

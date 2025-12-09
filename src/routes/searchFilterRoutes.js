@@ -5,9 +5,9 @@ import { saveKeywordController } from '../controllers/saveKeywordController.js';
 
 const router = express.Router();
 
-router.get('/suggestions', Authenticate, suggestionController);
+router.get('/suggestions',  suggestionController);
 
-router.get('/resume', Authenticate, searchKeywordController);
+router.post('/resume', Authenticate, searchKeywordController);
 
 // save keyword to DB
 router.post('/saveKeyword', Authenticate, saveKeywordController);
