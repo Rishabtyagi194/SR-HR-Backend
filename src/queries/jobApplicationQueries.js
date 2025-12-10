@@ -71,11 +71,7 @@ export const jobApplicationQueries = {
     ORDER BY ja.applied_at DESC
   `,
 
-  getAnswersByApplicationId: `
-    SELECT question_text, answer_text 
-    FROM job_application_answers 
-    WHERE application_id = ?
-  `,
+
   // to fetch all response on all jobs
   getAllCompanyApplications: `
     SELECT 
@@ -87,14 +83,19 @@ export const jobApplicationQueries = {
       u.full_name,
       u.email,
       u.phone,
+      up.gender,
+      up.address,
+      up.city,
+      up.state,
+      up.country,
       up.profile_title,
       up.about_me,
       up.current_location,
       up.preferred_location,
       up.total_experience_years,
       up.total_experience_months,
-      up.expected_salary,
       up.notice_period,
+      up.expected_salary,
       up.resume_url,
       
       -- Hot Vacancy Job fields
@@ -121,6 +122,12 @@ export const jobApplicationQueries = {
     
     WHERE ja.company_id = ?
     ORDER BY ja.applied_at DESC
+  `,
+
+  getAnswersByApplicationId: `
+    SELECT question_text, answer_text 
+    FROM job_application_answers 
+    WHERE application_id = ?
   `,
 
   // get all applied applicatio for users

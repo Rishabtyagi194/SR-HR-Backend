@@ -51,6 +51,16 @@ export const getProfile = async (req, res) => {
   }
 };
 
+export const getProfileById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const data = await UserService.getProfile(userId);
+    res.json({ message: 'Profile fetched successfully', data });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;

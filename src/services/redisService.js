@@ -47,25 +47,16 @@ export const saveKeyword = async (keyword) => {
  * Get keyword suggestions that start with a given prefix.
  * Uses ZRANGEBYLEX for very fast autocomplete.
  */
-export const getKeywordSuggestions = async (prefix, limit = 10) => {
-  if (!prefix) return [];
+export const getKeywordSuggestions = async (keyword, limit = 10) => {
+  if (!keyword) return [];
 
-  const value = prefix.toLowerCase().trim();
+  const value = keyword.toLowerCase().trim();
   if (!value) return [];
 
-  const min = `[${value}`; // inclusive lower bound
-  const max = `[${value}\xff`; // inclusive upper bound (prefix hack)
-
   try {
-    // const results = await redisClient.zRangeByLex(KEYWORDS_ZSET_KEY, min, max, {
-    //   LIMIT: {
-    //     offset: 0,
-    //     count: limit,
-    //   },
-    // });
 
     const allKeywords = await redisClient.zRange(KEYWORDS_ZSET_KEY, 0, -1);
-    const matched = allKeywords.filter((k) => k.includes(prefix.toLowerCase()));
+    const matched = allKeywords.filter((k) => k.includes(keyword.toLowerCase()));
     return matched.slice(0, 10);
 
     // return results;

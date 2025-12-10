@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import * as userController from '../controllers/userController.js';
-import { Authenticate } from '../middleware/authMiddleware.js';
+import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/fileUploadMiddleware.js';
 
 const router = express.Router();
@@ -24,8 +24,11 @@ router.post('/login', [body('email').isEmail(), body('password').notEmpty()], us
 
 /* ---------------------------- PROFILE PROTECTED ROUTES --------------------------- */
 
-// Get profile
+// Get profile for user who is login
 router.get('/profile', Authenticate, userController.getProfile);
+
+// Get profile of user by employer - search by resdex
+router.get('/profile/:id', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), userController.getProfileById);
 
 // Update profile
 router.patch('/profile/update', Authenticate, userController.updateProfile);

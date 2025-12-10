@@ -46,9 +46,9 @@ class EmployerService {
 
   async getAllEmployerStaff(employerId) {
     const staffs = await EmployerQueries.findAllStaffByEmployer(employerId);
-    if (!staffs || staffs.length === 0) {
-      throw new Error('No staff found for this employer.');
-    }
+    // if (!staffs || staffs.length === 0) {
+    //   throw new Error('No staff found for this employer.');
+    // }
     return staffs;
   }
 
