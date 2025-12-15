@@ -26,6 +26,8 @@ dotenv.config({
 
 // Validate critical vars
 const requiredVars = [
+  'DB_MASTER_HOST',
+  'DB_REPLICA_HOST',
   'DB_HOST',
   'DB_USER',
   'DB_PASSWORD',

@@ -31,6 +31,7 @@ export const dropAllTables = async () => {
       // 'resume_skills',
       // 'resume_education',
       // 'resume_experience',
+      // 'saved_jobs'
     ];
 
     for (const table of tables) {

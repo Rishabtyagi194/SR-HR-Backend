@@ -1,6 +1,7 @@
-import { saveKeyword, getKeywordSuggestions } from '../services/redisService.js';
-import { generateText } from '../services/ollamaService.js';
+import { getKeywordSuggestions } from '../services/redisService.js';
+// import { generateText } from '../services/ollamaService.js';
 import { getReadPool } from '../config/database.js';
+import { generateKeywords } from '../services/llmService.js';
 
 export const searchKeywordController = async (req, res) => {
   try {
@@ -103,18 +104,17 @@ query += ` GROUP BY users.id LIMIT 50`;
 export const suggestionController = async (req, res) => {
   try {
     const { keyword } = req.query;
-    if (!keyword) return res.json({ suggestions: [] });
+    if (!keyword) {
+      return res.status(400).json({ message: 'Keyword is required' });
+    }
 
     const redisSuggestions = await getKeywordSuggestions(keyword);
-
     if (redisSuggestions.length >= 5) {
       return res.json({ suggestions: redisSuggestions.slice(0, 10) });
     }
-
-    const [dbRows] = await getReadPool().execute(
-      `SELECT keyword FROM search_keywords_history WHERE keyword LIKE ? LIMIT 10`,
-      [`${keyword.toLowerCase()}%`]
-    );
+    const [dbRows] = await getReadPool().execute(`SELECT keyword FROM search_keywords_history WHERE keyword LIKE ? LIMIT 10`, [
+      `${keyword.toLowerCase()}%`,
+    ]);
     const dbSuggestions = dbRows.map((r) => r.keyword);
 
     if (redisSuggestions.length + dbSuggestions.length >= 5) {
@@ -122,32 +122,70 @@ export const suggestionController = async (req, res) => {
         suggestions: [...new Set([...redisSuggestions, ...dbSuggestions])].slice(0, 10),
       });
     }
+    
+    const result = await generateKeywords(keyword);
 
-    let aiSuggestions = [];
-    if (keyword.length > 3) {
-    const prompt = `
-      Generate only related job keywords for: "${keyword}".
-      Return ONLY a comma-separated list with no sentences, no explanations, no quotes, no new lines.
-      Example output: software engineer, backend developer, react developer, java, programming
-    `;
+    // Convert text → array
+    const keywords = result
+      .split(/[\n,]/)
+      .map((k) => k.trim())
+      .filter(Boolean);
 
-      const aiResult = await generateText(prompt);
-
-      if (aiResult && typeof aiResult === "string" && aiResult.includes(",")) {
-        aiSuggestions = aiResult.split(",").map((v) => v.trim()).filter(Boolean);
-      }
-    }
-
-    const finalSuggestions = [...new Set([...redisSuggestions, ...dbSuggestions, ...aiSuggestions])];
-
-    return res.json({ suggestions: finalSuggestions.slice(0, 10) });
-  } catch (err) {
-    console.error("Suggestion error:", err);
-    res.json({ suggestions: [] });
+    res.json({ suggestions: keywords });
+  } catch (error) {
+    console.error('Groq error:', error.message);
+    res.status(500).json({ message: 'Failed to generate keywords' });
   }
 };
 
+// export const suggestionController = async (req, res) => {
+//   try {
+//     const { keyword } = req.query;
+//     if (!keyword) return res.json({ suggestions: [] });
 
+//     const redisSuggestions = await getKeywordSuggestions(keyword);
+
+//     if (redisSuggestions.length >= 5) {
+//       return res.json({ suggestions: redisSuggestions.slice(0, 10) });
+//     }
+
+//     const [dbRows] = await getReadPool().execute(
+//       `SELECT keyword FROM search_keywords_history WHERE keyword LIKE ? LIMIT 10`,
+//       [`${keyword.toLowerCase()}%`]
+//     );
+//     const dbSuggestions = dbRows.map((r) => r.keyword);
+
+//     if (redisSuggestions.length + dbSuggestions.length >= 5) {
+//       return res.json({
+//         suggestions: [...new Set([...redisSuggestions, ...dbSuggestions])].slice(0, 10),
+//       });
+//     }
+
+//     let aiSuggestions = [];
+//     if (keyword.length > 3) {
+//     const prompt = `
+//       Generate only related job keywords for: "${keyword}".
+//       Return ONLY a comma-separated list with no sentences, no explanations, no quotes, no new lines.
+//       Example output: software engineer, backend developer, react developer, java, programming
+//     `;
+
+//       const aiResult = await generateText(prompt);
+
+//       if (aiResult && typeof aiResult === "string" && aiResult.includes(",")) {
+//         aiSuggestions = aiResult.split(",").map((v) => v.trim()).filter(Boolean);
+//       }
+//     }
+
+//     const finalSuggestions = [...new Set([...redisSuggestions, ...dbSuggestions, ...aiSuggestions])];
+
+//     return res.json({ suggestions: finalSuggestions.slice(0, 10) });
+//   } catch (err) {
+//     console.error("Suggestion error:", err);
+//     res.json({ suggestions: [] });
+//   }
+// };
+
+// ----------------------------------------------------------------------------------
 // export const searchKeywordController = async (req, res) => {
 //   try {
 //     const { keyword } = req.query;
