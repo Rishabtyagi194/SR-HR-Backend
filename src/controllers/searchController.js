@@ -5,16 +5,7 @@ import { generateKeywords } from '../services/llmService.js';
 
 export const searchKeywordController = async (req, res) => {
   try {
-    const {
-      keywords = [],
-      minExpYears,
-      maxExpYears,
-      location,
-      preferredLocation,
-      noticePeriod,
-      expectedSalary,
-      boolean
-    } = req.body;
+    const { keywords = [], minExpYears, maxExpYears, location, preferredLocation, noticePeriod, expectedSalary, boolean } = req.body;
 
     const employerId = req.user.id;
     const companyId = req.user.company_id;
@@ -45,96 +36,228 @@ export const searchKeywordController = async (req, res) => {
   WHERE job_applications.company_id = ?
 `;
 
+    const params = [companyId];
 
-   const params = [companyId];
+    if (mainKeyword) {
+      query += ` AND (user_profiles.profile_title LIKE ? OR user_skills.skill_name LIKE ?)`;
+      params.push(`%${mainKeyword}%`, `%${mainKeyword}%`);
+    }
 
-if (mainKeyword) {
-  query += ` AND (user_profiles.profile_title LIKE ? OR user_skills.skill_name LIKE ?)`;
-  params.push(`%${mainKeyword}%`, `%${mainKeyword}%`);
-}
+    if (location) {
+      query += ` AND user_profiles.current_location LIKE ?`;
+      params.push(`%${location}%`);
+    }
 
-if (location) {
-  query += ` AND user_profiles.current_location LIKE ?`;
-  params.push(`%${location}%`);
-}
+    if (preferredLocation) {
+      query += ` AND user_profiles.preferred_location LIKE ?`;
+      params.push(`%${preferredLocation}%`);
+    }
 
-if (preferredLocation) {
-  query += ` AND user_profiles.preferred_location LIKE ?`;
-  params.push(`%${preferredLocation}%`);
-}
+    if (minExpYears) {
+      query += ` AND user_profiles.total_experience_years >= ?`;
+      params.push(minExpYears);
+    }
 
-if (minExpYears) {
-  query += ` AND user_profiles.total_experience_years >= ?`;
-  params.push(minExpYears);
-}
+    if (maxExpYears) {
+      query += ` AND user_profiles.total_experience_years <= ?`;
+      params.push(maxExpYears);
+    }
 
-if (maxExpYears) {
-  query += ` AND user_profiles.total_experience_years <= ?`;
-  params.push(maxExpYears);
-}
+    if (expectedSalary) {
+      query += ` AND user_profiles.expected_salary <= ?`;
+      params.push(expectedSalary);
+    }
 
-if (expectedSalary) {
-  query += ` AND user_profiles.expected_salary <= ?`;
-  params.push(expectedSalary);
-}
+    if (noticePeriod) {
+      query += ` AND user_profiles.notice_period <= ?`;
+      params.push(noticePeriod);
+    }
 
-if (noticePeriod) {
-  query += ` AND user_profiles.notice_period <= ?`;
-  params.push(noticePeriod);
-}
-
-query += ` GROUP BY users.id LIMIT 50`;
-
+    query += ` GROUP BY users.id LIMIT 50`;
 
     const [resumes] = await getReadPool().execute(query, params);
-    console.log("resumes", resumes );
+    console.log('resumes', resumes);
 
     return res.json({
       success: true,
       total: resumes.length,
       applicants: resumes,
     });
-
   } catch (err) {
-    console.error("Search error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error('Search error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+// export const suggestionController = async (req, res) => {
+//   try {
+//     const { keyword } = req.query;
+//     if (!keyword) {
+//       return res.status(400).json({ message: 'Keyword is required' });
+//     }
+
+//     // Redis
+//     const redisSuggestions = await getKeywordSuggestions(keyword);
+//     if (redisSuggestions.length >= 5) {
+//       return res.json({ suggestions: redisSuggestions.slice(0, 10) });
+//     }
+//     console.log("redisSuggestions", redisSuggestions);
+
+//     // DB
+//     const [dbRows] = await getReadPool().execute(`SELECT keyword FROM search_keywords_history WHERE keyword LIKE ? LIMIT 10`, [
+//       `${keyword.toLowerCase()}%`,
+//     ]);
+
+//     const dbSuggestions = dbRows.map((r) => r.keyword);
+
+//     if (redisSuggestions.length + dbSuggestions.length >= 5) {
+//       return res.json({
+//         suggestions: [...new Set([...redisSuggestions, ...dbSuggestions])].slice(0, 10),
+//       });
+//     }
+
+//     const result = await generateKeywords(keyword);
+
+//     // Convert text → array
+//     const keywords = result
+//       .split(/[\n,]/)
+//       .map((k) => k.trim())
+//       .filter(Boolean);
+
+//     res.json({ suggestions: keywords });
+//   } catch (error) {
+//     console.error('Groq error:', error.message);
+//     res.status(500).json({ message: 'Failed to generate keywords' });
+//   }
+// };
+
+// export const suggestionController = async (req, res) => {
+//   try {
+//     const { keyword } = req.query;
+//     if (!keyword) {
+//       return res.status(400).json({ message: 'Keyword is required' });
+//     }
+
+//     const value = keyword.toLowerCase().trim();
+
+//     // Redis (selected keywords only)
+//     const redisSuggestions = await getKeywordSuggestions(value);
+
+//     if (redisSuggestions.length >= 5) {
+//       return res.json({ suggestions: redisSuggestions.slice(0, 10) });
+//     }
+//       console.log("redisSuggestions keyword:::", redisSuggestions);
+
+//     // DB (selected keywords only)
+//     const [dbRows] = await getReadPool().execute(
+//       `SELECT keyword FROM search_keywords_history WHERE keyword LIKE ? LIMIT 10`,
+//       [`${value}%`]
+//     );
+
+//     const dbSuggestions = dbRows.map(r => r.keyword);
+//     const combined = [...new Set([...redisSuggestions, ...dbSuggestions])];
+
+//     if (combined.length >= 5) {
+//       return res.json({ suggestions: combined.slice(0, 10) });
+//     }
+
+//     // Groq fallback (NO STORAGE)
+//     console.log("🤖 Calling Groq for:", value);
+//     const result = await generateKeywords(value);
+
+//     const aiKeywords = result
+//       .split(/[\n,]/)
+//       .map(k =>
+//         k
+//           .toLowerCase()
+//           .replace(/[^\w\s]/g, '')
+//           .trim()
+//       )
+//       .filter(Boolean);
+
+//     return res.json({ suggestions: aiKeywords.slice(0, 10) });
+
+//   } catch (error) {
+//     console.error('Groq error:', error.message);
+//     return res.json({ suggestions: [] });
+//   }
+// };
 
 export const suggestionController = async (req, res) => {
   try {
     const { keyword } = req.query;
+
     if (!keyword) {
       return res.status(400).json({ message: 'Keyword is required' });
     }
 
-    const redisSuggestions = await getKeywordSuggestions(keyword);
-    if (redisSuggestions.length >= 5) {
-      return res.json({ suggestions: redisSuggestions.slice(0, 10) });
-    }
-    const [dbRows] = await getReadPool().execute(`SELECT keyword FROM search_keywords_history WHERE keyword LIKE ? LIMIT 10`, [
-      `${keyword.toLowerCase()}%`,
-    ]);
-    const dbSuggestions = dbRows.map((r) => r.keyword);
+    const value = keyword.toLowerCase().trim();
 
-    if (redisSuggestions.length + dbSuggestions.length >= 5) {
+    // Redis (highest priority)
+    const redisSuggestions = await getKeywordSuggestions(value);
+
+    if (redisSuggestions.length > 0) {
       return res.json({
-        suggestions: [...new Set([...redisSuggestions, ...dbSuggestions])].slice(0, 10),
+        source: 'redis',
+        suggestions: redisSuggestions.slice(0, 10),
       });
     }
-    
-    const result = await generateKeywords(keyword);
 
-    // Convert text → array
-    const keywords = result
+    // Database (fallback)
+    const [dbRows] = await getReadPool().execute(
+      `
+        SELECT keyword
+        FROM search_keywords_history
+        WHERE keyword LIKE ?
+        ORDER BY created_at DESC
+        LIMIT 10
+      `,
+      [`${value}%`],
+    );
+
+    const dbSuggestions = dbRows.map((row) => row.keyword);
+
+    if (dbSuggestions.length > 0) {
+      return res.json({
+        source: 'db',
+        suggestions: dbSuggestions.slice(0, 10),
+      });
+    }
+
+    // AI (Groq – last fallback)
+    console.log('Calling AI for:', value);
+
+    const aiText = await generateKeywords(value);
+
+    const aiSuggestions = aiText
       .split(/[\n,]/)
-      .map((k) => k.trim())
-      .filter(Boolean);
+      .map((k) =>
+        k
+          .toLowerCase()
+          .replace(/[^\w\s]/g, '')
+          .trim(),
+      )
+      .filter(Boolean)
+      .slice(0, 10);
 
-    res.json({ suggestions: keywords });
+    if (aiSuggestions.length > 0) {
+      return res.json({
+        source: 'ai',
+        suggestions: aiSuggestions,
+      });
+    }
+
+    // Nothing found
+    return res.json({
+      source: 'none',
+      suggestions: [],
+    });
   } catch (error) {
-    console.error('Groq error:', error.message);
-    res.status(500).json({ message: 'Failed to generate keywords' });
+    console.error('SuggestionController error:', error.message);
+    return res.json({
+      source: 'error',
+      suggestions: [],
+    });
   }
 };
 
@@ -211,7 +334,7 @@ export const suggestionController = async (req, res) => {
 
 //     const [resumes] = await getReadPool().execute(
 //       `
-//       SELECT 
+//       SELECT
 //         users.id AS user_id,
 //         users.full_name,
 //         users.email,
@@ -223,7 +346,7 @@ export const suggestionController = async (req, res) => {
 //       LEFT JOIN user_profiles ON users.id = user_profiles.user_id
 //       LEFT JOIN user_skills ON users.id = user_skills.user_id
 //       LEFT JOIN user_experience ON users.id = user_experience.user_id
-//       WHERE 
+//       WHERE
 //         job_applications.company_id = ? AND (
 //           user_profiles.profile_title LIKE ? OR
 //           user_profiles.about_me LIKE ? OR
@@ -252,7 +375,6 @@ export const suggestionController = async (req, res) => {
 //   }
 // };
 
-
 // *******************************************************************************************************************
 
 // export const suggestionController = async (req, res) => {
@@ -265,21 +387,21 @@ export const suggestionController = async (req, res) => {
 
 //     // AI suggestions only when length > 3
 //     let aiSuggestions = [];
-  //   if (keyword.length > 3) {
-  //     const aiResult = await generateText(
-  //       `Generate only related job keywords for: "${keyword}".
-  //  Return ONLY a comma-separated list with no sentences, no explanations, no quotes, no new lines.
-  //  Example output: software engineer, backend developer, react developer, java, programming`,
-  //     );
+//   if (keyword.length > 3) {
+//     const aiResult = await generateText(
+//       `Generate only related job keywords for: "${keyword}".
+//  Return ONLY a comma-separated list with no sentences, no explanations, no quotes, no new lines.
+//  Example output: software engineer, backend developer, react developer, java, programming`,
+//     );
 
-  //     aiSuggestions = aiResult
-  //       ?.replace(/(\r\n|\n|\r)/gm, '')
-  //       ?.replace(/[^a-zA-Z0-9, ]/g, '')
-  //       ?.split(',')
-  //       ?.map((v) => v.trim())
-  //       ?.filter(Boolean)
-  //       .slice(0, 8);
-  //   }
+//     aiSuggestions = aiResult
+//       ?.replace(/(\r\n|\n|\r)/gm, '')
+//       ?.replace(/[^a-zA-Z0-9, ]/g, '')
+//       ?.split(',')
+//       ?.map((v) => v.trim())
+//       ?.filter(Boolean)
+//       .slice(0, 8);
+//   }
 
 //     return res.json({
 //       suggestions: [...new Set([...redisSuggestions, ...aiSuggestions])].slice(0, 10),

@@ -13,3 +13,7 @@ export const sendVerificationOTP = async (email, otp) => {
   `;
   await sendEmail(email, 'RozgarDwar - Email Verification OTP', html);
 };
+
+
+
+
