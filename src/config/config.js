@@ -32,6 +32,7 @@ const requiredVars = [
   'DB_USER',
   'DB_PASSWORD',
   'DB_NAME',
+  'GROQ_API_KEY',
 ];
 
 for (const key of requiredVars) {
