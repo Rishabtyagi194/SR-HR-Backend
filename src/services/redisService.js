@@ -47,21 +47,42 @@ export const saveKeyword = async (keyword) => {
  * Get keyword suggestions that start with a given prefix.
  * Uses ZRANGEBYLEX for very fast autocomplete.
  */
+// export const getKeywordSuggestions = async (keyword, limit = 10) => {
+//   if (!keyword) return [];
+
+//   const value = keyword.toLowerCase().trim();
+//   if (!value) return [];
+
+//   try {
+
+//     const allKeywords = await redisClient.zRange(KEYWORDS_ZSET_KEY, 0, -1);
+//     // const matched = allKeywords.filter((k) => k.includes(keyword.toLowerCase()));
+//     const matched = allKeywords.filter((k) =>
+//   k.toLowerCase().includes(value)
+// );
+
+//     return matched.slice(0, 10);
+
+//     // return results;
+//   } catch (err) {
+//     console.error('Error getting keyword suggestions from Redis:', err.message);
+//     return [];
+//   }
+// };
+
 export const getKeywordSuggestions = async (keyword, limit = 10) => {
+  
   if (!keyword) return [];
 
   const value = keyword.toLowerCase().trim();
-  if (!value) return [];
 
   try {
-
     const allKeywords = await redisClient.zRange(KEYWORDS_ZSET_KEY, 0, -1);
-    const matched = allKeywords.filter((k) => k.includes(keyword.toLowerCase()));
-    return matched.slice(0, 10);
-
-    // return results;
+    return allKeywords
+      .filter(k => k.toLowerCase().includes(value))
+      .slice(0, limit);
   } catch (err) {
-    console.error('Error getting keyword suggestions from Redis:', err.message);
+    console.error('Redis error:', err.message);
     return [];
   }
 };

@@ -9,3 +9,5 @@ export const saveSearchKeyword = async (employerId, keyword) => {
 
   await saveKeywordToRedis(trimmed);
 };
+
+
