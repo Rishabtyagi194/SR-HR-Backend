@@ -506,7 +506,24 @@ export const initializeDatabase = async () => {
       );
     `);
 
-    // **************************************************************************
+    // *************************************** saved jobs ***********************************
+    
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS saved_jobs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT UNSIGNED NOT NULL,
+        job_id INT NOT NULL,
+        job_type ENUM('HotVacancy', 'Internship') NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        UNIQUE KEY unique_saved_job (user_id, job_id, job_type),
+
+        INDEX idx_user (user_id),
+        INDEX idx_job (job_id, job_type)
+      ) ENGINE=InnoDB;
+    `);
+    
+    
     connection.release();
     console.log('All database tables initialized successfully.');
   } catch (error) {

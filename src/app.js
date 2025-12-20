@@ -17,6 +17,9 @@ import jobApplication from './routes/jobApplicationRoutes.js';
 import otpRoutes from './routes/otpVerificationRoutes.js';
 import uploadResume from './routes/resumeRoutes.js';
 import searchRoutes from './routes/searchFilterRoutes.js';
+import saveJobsRoutes from './routes/savedJobRoutes.js';
+
+
 const app = express();
 
 // app.use(helmet());
@@ -49,5 +52,6 @@ app.use('/api/resume', uploadResume);
 app.use('/otp', otpRoutes);
 app.use('/api/excel', uploadExcel);
 app.use('/api/search', searchRoutes);
+app.use('/api/savejob', saveJobsRoutes);
 
 export default app;
