@@ -5,8 +5,13 @@ const groq = new Groq({
 });
 
 export async function generateKeywords(keyword) {
-  // console.log(" GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
+  console.log(" GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
 
+  console.log(' AI DEBUG →', {
+    keyword,
+    NODE_ENV: process.env.NODE_ENV,
+    GROQ_KEY_LOADED: !!process.env.GROQ_API_KEY,
+  });
   const completion = await groq.chat.completions.create({
     model: "llama-3.1-8b-instant", //  FIXED MODEL
     messages: [
