@@ -18,7 +18,7 @@ import otpRoutes from './routes/otpVerificationRoutes.js';
 import uploadResume from './routes/resumeRoutes.js';
 import searchRoutes from './routes/searchFilterRoutes.js';
 import saveJobsRoutes from './routes/savedJobRoutes.js';
-
+import LocationRoutes from './routes/locationRoutes.js'
 
 const app = express();
 
@@ -53,5 +53,6 @@ app.use('/otp', otpRoutes);
 app.use('/api/excel', uploadExcel);
 app.use('/api/search', searchRoutes);
 app.use('/api/savejob', saveJobsRoutes);
+app.use('/api/location', LocationRoutes);
 
 export default app;
