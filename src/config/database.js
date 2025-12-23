@@ -283,6 +283,8 @@ export const initializeDatabase = async () => {
         phone VARCHAR(20) UNIQUE,
         role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
         email_otp VARCHAR(10),
+        is_mobile_verified BOOLEAN DEFAULT FALSE,
+        is_email_verified BOOLEAN DEFAULT FALSE,
         otp_expires_at DATETIME,
         is_active BOOLEAN DEFAULT FALSE,
         last_login TIMESTAMP NULL,
@@ -308,11 +310,14 @@ export const initializeDatabase = async () => {
         profile_completion INT DEFAULT 0,
         profile_title VARCHAR(255),
         about_me TEXT,
+        is_pwd BOOLEAN DEFAULT FALSE,
         current_location VARCHAR(255),
         preferred_location VARCHAR(255),
+        willingToRelocate BOOLEAN DEFAULT FALSE,
         total_experience_years INT DEFAULT 0,
         total_experience_months INT DEFAULT 0,
         notice_period VARCHAR(50),
+        current_salary VARCHAR(50),
         expected_salary VARCHAR(50),
         resume_url VARCHAR(500),
         resume_public_id VARCHAR(255),
@@ -343,8 +348,12 @@ export const initializeDatabase = async () => {
       CREATE TABLE IF NOT EXISTS user_experience (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
+        department VARCHAR(255),
+        industry VARCHAR(255),
         company_name VARCHAR(255),
         job_title VARCHAR(255),
+        job_type VARCHAR(255),
+        employment_type VARCHAR(255),
         start_date DATE,
         end_date DATE,
         currently_working BOOLEAN DEFAULT FALSE,
@@ -507,7 +516,7 @@ export const initializeDatabase = async () => {
     `);
 
     // *************************************** saved jobs ***********************************
-    
+
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS saved_jobs (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -522,8 +531,7 @@ export const initializeDatabase = async () => {
         INDEX idx_job (job_id, job_type)
       ) ENGINE=InnoDB;
     `);
-    
-    
+
     connection.release();
     console.log('All database tables initialized successfully.');
   } catch (error) {
