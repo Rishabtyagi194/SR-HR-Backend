@@ -60,7 +60,7 @@ class UserService {
   //  Login only if verified (is_active = true)
   async login({ email, password }) {
     const user = await UserQueries.findByEmail(email);
-    // console.log('user', user);
+    console.log('user', user);
     // console.log('user.is_active', user.is_active);
 
     if (!user) throw new Error('Invalid credentials');
@@ -74,7 +74,19 @@ class UserService {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 
-    return { token, user };
+    return {
+      token,
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        phone: user.phone,
+        is_mobile_verified: user.is_mobile_verified,
+        is_email_verified: user.is_email_verified,
+        role: user.role,
+        is_active: user.is_active,
+      },
+    };
   }
 
   //  ---------------------------- Profile ---------------------------

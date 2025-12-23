@@ -6,7 +6,7 @@ import { saveSearchKeyword } from '../services/searchKeywordService.js';
 class UserQueries {
   async findByEmail(email) {
     const [rows] = await getReadPool().execute(
-      `SELECT id, full_name, email, password, phone, role, is_active, created_at, updated_at 
+      `SELECT id, full_name, email, password, phone, is_mobile_verified, is_email_verified, role, is_active, created_at, updated_at 
      FROM users 
      WHERE email = ? 
      LIMIT 1`,
@@ -18,10 +18,10 @@ class UserQueries {
   async findById(userId) {
     const [rows] = await getReadPool().execute(
       `SELECT 
-       u.id, u.full_name, u.email, u.password, u.phone, u.created_at, u.updated_at,
+       u.id, u.full_name, u.email, u.password, u.phone, u.is_active, u.is_mobile_verified, u.is_email_verified, u.created_at, u.updated_at,
        p.dob, p.gender, p.address, p.city, p.state, p.country, p.pincode, p.profile_completion,
-       p.profile_title, p.about_me, p.current_location, p.preferred_location,
-       p.total_experience_years, p.total_experience_months, p.notice_period, p.expected_salary,
+       p.profile_title, p.about_me, p.is_pwd, p.current_location, p.preferred_location, p.willingToRelocate,
+       p.total_experience_years, p.total_experience_months, p.notice_period, p.current_salary, p.expected_salary,
        p.resume_url, p.resume_public_id
      FROM users u
      LEFT JOIN user_profiles p ON u.id = p.user_id
@@ -37,9 +37,9 @@ class UserQueries {
     const [rows] = await getReadPool().execute(
       `SELECT u.id, u.full_name, u.email, u.phone, u.created_at, u.updated_at,
               up.dob, up.gender, up.address, up.city, up.state, up.country, up.pincode,
-              up.profile_completion, up.profile_title, up.about_me, up.current_location,
-              up.preferred_location, up.total_experience_years, up.total_experience_months,
-              up.notice_period, up.expected_salary, up.resume_url, up.resume_public_id
+              up.profile_completion, up.profile_title, up.about_me, up.is_pwd, up.current_location,
+              up.preferred_location, up.willingToRelocate, up.total_experience_years, up.total_experience_months,
+              up.notice_period, up.current_salary, up.expected_salary, up.resume_url, up.resume_public_id
        FROM users u
        LEFT JOIN user_profiles up ON u.id = up.user_id
        WHERE u.id = ?`,
@@ -53,10 +53,10 @@ class UserQueries {
     const [result] = await getWritePool().execute(
       `INSERT INTO user_profiles
       (user_id, dob, gender, address, city, state, country, pincode, profile_completion,
-       profile_title, about_me, current_location, preferred_location,
-       total_experience_years, total_experience_months, notice_period, expected_salary,
+       profile_title, about_me, is_pwd, current_location, preferred_location, willingToRelocate,
+       total_experience_years, total_experience_months, notice_period, current_salary, expected_salary,
        resume_url, resume_public_id, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
         userId,
         profile.dob || null,
@@ -69,11 +69,14 @@ class UserQueries {
         profile.profile_completion || 0,
         profile.profile_title || null,
         profile.about_me || null,
+        profile.is_pwd || null,
         profile.current_location || null,
         profile.preferred_location || null,
+        profile.willingToRelocate || flase,
         profile.total_experience_years || 0,
         profile.total_experience_months || 0,
         profile.notice_period || null,
+        profile.current_salary || null,
         profile.expected_salary || null,
         profile.resume_url || null,
         profile.resume_public_id || null,
@@ -101,11 +104,14 @@ class UserQueries {
       'profile_completion',
       'profile_title',
       'about_me',
+      'is_pwd',
       'current_location',
       'preferred_location',
+      'willingToRelocate',
       'total_experience_years',
       'total_experience_months',
       'notice_period',
+      'current_salary',
       'expected_salary',
       'resume_url',
     ];
@@ -237,12 +243,16 @@ class UserQueries {
   // ADD EXPERINCE
   async addExperience(userId, exp) {
     await getWritePool().execute(
-      `INSERT INTO user_experience (user_id, company_name, job_title, start_date, end_date, currently_working, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO user_experience (user_id, department, industry, company_name, job_title, job_type, employment_type, start_date, end_date, currently_working, description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
-        exp.company_name,
-        exp.job_title,
+        exp.department || null,
+        exp.industry || null,
+        exp.company_name || null,
+        exp.job_title || null,
+        exp.job_type || null,
+        exp.employment_type || null,
         exp.start_date || null,
         exp.end_date || null,
         exp.currently_working ? 1 : 0,
@@ -261,8 +271,12 @@ class UserQueries {
 
     const existing = rows[0];
     const updated = {
+      department: exp.department ?? existing.department,
+      industry: exp.industry ?? existing.industry,
       company_name: exp.company_name ?? existing.company_name,
       job_title: exp.job_title ?? existing.job_title,
+      job_type: exp.job_type ?? existing.job_type,
+      employment_type: exp.employment_type ?? existing.employment_type,
       start_date: exp.start_date ?? existing.start_date,
       end_date: exp.end_date ?? existing.end_date,
       currently_working: exp.currently_working ?? existing.currently_working,
@@ -271,11 +285,15 @@ class UserQueries {
 
     const [res] = await getWritePool().execute(
       `UPDATE user_experience
-     SET company_name = ?, job_title = ?, start_date = ?, end_date = ?, currently_working = ?, description = ?
+     SET department = ?, industry = ?, company_name = ?, job_title = ?, job_type = ?, employment_type = ?, start_date = ?, end_date = ?, currently_working = ?, description = ?
      WHERE id = ? AND user_id = ?`,
       [
+        updated.department,
+        updated.industry,
         updated.company_name,
         updated.job_title,
+        updated.job_type,
+        updated.employment_type,
         updated.start_date,
         updated.end_date,
         updated.currently_working,
