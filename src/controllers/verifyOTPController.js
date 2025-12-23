@@ -22,7 +22,7 @@ export const verifyOTP = async (req, res) => {
 
     if (new Date() > new Date(user.otp_expires_at)) return res.status(400).json({ message: 'OTP expired.' });
 
-    await getWritePool().execute(`UPDATE ${table} SET is_active = 1, email_otp = NULL, otp_expires_at = NULL WHERE id = ?`, [user.id]);
+    await getWritePool().execute(`UPDATE ${table} SET is_email_verified = 1, is_active = 1, email_otp = NULL, otp_expires_at = NULL WHERE id = ?`, [user.id]);
 
     res.status(200).json({
       success: true,

@@ -5,9 +5,11 @@ export default class User {
     email,
     password,
     phone,
+    is_mobile_verified = 0,
+    is_email_verified = 0,
     created_at,
     updated_at,
-    is_active,
+    is_active = 0,
     // Profile fields
     dob = null,
     gender = null,
@@ -19,11 +21,14 @@ export default class User {
     profile_completion = 0,
     profile_title = null,
     about_me = null,
+    is_pwd = null,
     current_location = null,
     preferred_location = null,
+    willingToRelocate = null,
     total_experience_years = 0,
     total_experience_months = 0,
     notice_period = null,
+    current_salary = null,
     expected_salary = null,
     resume_url = null,
     resume_public_id = null,
@@ -33,6 +38,8 @@ export default class User {
     this.email = email;
     this.password = password;
     this.phone = phone;
+    this.is_mobile_verified = is_mobile_verified;
+    this.is_email_verified = is_email_verified;
     this.created_at = created_at;
     this.updated_at = updated_at;
     this.is_active = is_active === 1 || is_active === false;
@@ -46,11 +53,14 @@ export default class User {
     this.profile_completion = profile_completion;
     this.profile_title = profile_title;
     this.about_me = about_me;
+    this.is_pwd = is_pwd;
     this.current_location = current_location;
     this.preferred_location = preferred_location;
+    this.willingToRelocate = willingToRelocate;
     this.total_experience_years = total_experience_years;
     this.total_experience_months = total_experience_months;
     this.notice_period = notice_period;
+    this.current_salary = current_salary;
     this.expected_salary = expected_salary;
     this.resume_url = resume_url;
     this.resume_public_id = resume_public_id;
