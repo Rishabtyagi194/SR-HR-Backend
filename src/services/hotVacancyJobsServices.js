@@ -17,7 +17,7 @@ class JobsService {
 
   // Paginated list of all jobs (with Redis cache)
   async listAllJobs(page = 1, limit = 10, companyId = null) {
-    const cacheKey = companyId ? `jobs:list:${companyId}:${page}:${limit}` : `jobs:list:all:${page}:${limit}`;
+    const cacheKey = companyId ? `hotvacancy:list:${companyId}:${page}:${limit}` : `hotvacancy:list:all:${page}:${limit}`;
 
     const cached = await redis.get(cacheKey);
 
@@ -29,15 +29,15 @@ class JobsService {
     console.log(` Cache miss → fetching from DB...`);
     const data = await JobPostQueries.getAllJobs(page, limit, companyId);
 
-    // Store in Redis with short TTL (60s)
-    await redis.set(cacheKey, JSON.stringify(data), 'EX', 300); // 5 min
+    // Store in Redis 
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 600); // 10 min
 
     return data;
   }
 
   //  Fetch single job with caching
   async getJobById(jobId) {
-    const cacheKey = `job:${jobId}`;
+    const cacheKey = `hotvacancy:${jobId}`;
     const cached = await redis.get(cacheKey);
 
     if (cached) {
