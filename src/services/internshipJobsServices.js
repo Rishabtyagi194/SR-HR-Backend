@@ -14,7 +14,7 @@ class internshipService {
 
   // Paginated list of all jobs (with Redis cache)
   async listAllInternship(page = 1, limit = 10, companyId = null) {
-    const cacheKey = companyId ? `jobs:list:${companyId}:${page}:${limit}` : `jobs:list:all:${page}:${limit}`;
+    const cacheKey = companyId ? `internships:list:${companyId}:${page}:${limit}` : `internships:list:all:${page}:${limit}`;
     // console.log('cacheKey', cacheKey);
 
     const cached = await redis.get(cacheKey);
@@ -29,14 +29,14 @@ class internshipService {
     const data = await internshipQueries.allInternship(page, limit, companyId);
 
     // Store in Redis with short TTL (5 min => 5 * 60s = 300)
-    await redis.set(cacheKey, JSON.stringify(data), 'EX', 300);
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 600);
 
     return data;
   }
 
   //  Fetch single job with caching
   async getinternshipById(jobId) {
-    const cacheKey = `job:${jobId}`;
+    const cacheKey = `internships:${jobId}`;
     const cached = await redis.get(cacheKey);
 
     if (cached) {

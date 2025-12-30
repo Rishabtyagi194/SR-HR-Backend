@@ -160,6 +160,7 @@ export const initializeDatabase = async () => {
         role ENUM('employer_admin', 'employer_staff') DEFAULT 'employer_admin',
         permissions JSON,
         is_active BOOLEAN DEFAULT FALSE,
+        is_email_verified BOOLEAN DEFAULT FALSE,
         email_otp VARCHAR(10),
         otp_expires_at DATETIME,
         last_login TIMESTAMP NULL,
