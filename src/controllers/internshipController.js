@@ -5,7 +5,7 @@ import internshipJobsServices from '../services/internshipJobsServices.js';
 export const createInternshipJobsController = async (req, res) => {
   try {
     const user = req.user;
-    console.log('REQ.USER', req.user);
+    // console.log('REQ.USER', req.user);
 
     const {
       internshipTitle,

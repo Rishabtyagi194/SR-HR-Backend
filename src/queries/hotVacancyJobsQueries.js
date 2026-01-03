@@ -83,14 +83,26 @@ class jobQueries {
         [companyId],
       );
     } else {
-      [rows] = await getReadPool().query(
-        `SELECT * FROM HotVacancyJobs 
-         ORDER BY created_at DESC 
-         LIMIT ? OFFSET ?`,
-        [limit, offset],
-      );
+      // Client side all jobs
 
-      [[{ total }]] = await getReadPool().execute(`SELECT COUNT(*) as total FROM HotVacancyJobs`);
+     [rows] = await getReadPool().query(
+      `
+      SELECT * FROM HotVacancyJobs
+      WHERE LOWER(Status) = 'active'
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+      `,
+      [limit, offset],
+    );
+
+
+    [[{ total }]] = await getReadPool().execute(
+      `
+      SELECT COUNT(*) AS total
+      FROM HotVacancyJobs
+      WHERE Status = 'active'
+      `
+    );
     }
 
     // attach total responses
