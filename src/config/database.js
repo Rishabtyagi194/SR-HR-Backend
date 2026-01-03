@@ -125,7 +125,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // ompanies
+    // company table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS companies (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -173,7 +173,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // // Add foreign key for companies.admin_user_id now that employer_users exists
+    // Add foreign key for companies.admin_user_id now that employer_users exists
     // await connection
     //   .execute(
     //     `
@@ -525,7 +525,6 @@ export const initializeDatabase = async () => {
         job_id INT NOT NULL,
         job_type ENUM('HotVacancy', 'Internship') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
         UNIQUE KEY unique_saved_job (user_id, job_id, job_type),
 
         INDEX idx_user (user_id),
@@ -533,6 +532,67 @@ export const initializeDatabase = async () => {
       ) ENGINE=InnoDB;
     `);
 
+    // *************************************** consultant ***********************************
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS consultant_agencies (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        industry VARCHAR(255),
+        contact_email VARCHAR(255) NOT NULL,
+        contact_phone VARCHAR(20),
+        address TEXT,
+        verified BOOLEAN DEFAULT FALSE,
+        status ENUM('active', 'suspended') DEFAULT 'active',
+        consultant_user_id INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_name (name),
+        INDEX idx_status (status)
+      )
+    `);
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS consultant_users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        agency_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        phone VARCHAR(20) UNIQUE,
+        role ENUM('consultant_admin', 'consultant_staff') DEFAULT 'consultant_staff',
+        email_otp VARCHAR(10),
+        otp_expires_at DATETIME,
+        is_mobile_verified BOOLEAN DEFAULT FALSE,
+        is_email_verified BOOLEAN DEFAULT FALSE,
+        is_active BOOLEAN DEFAULT FALSE,
+        last_login TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (agency_id) REFERENCES consultant_agencies(id) ON DELETE CASCADE,
+        INDEX idx_email (email),
+        INDEX idx_phone (phone)
+      )
+    `);
+
+    // ADD FK only if it doesn't exist
+      const [fkRows] = await connection.execute(`
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.TABLE_CONSTRAINTS
+        WHERE
+          TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'consultant_agencies'
+          AND CONSTRAINT_NAME = 'fk_consultant_agency_owner'
+      `);
+
+      if (fkRows.length === 0) {
+        await connection.execute(`
+        ALTER TABLE consultant_agencies
+        ADD CONSTRAINT fk_consultant_agency_owner
+        FOREIGN KEY (consultant_user_id) REFERENCES consultant_users(id)
+        ON DELETE SET NULL
+      `);
+    }
     connection.release();
     console.log('All database tables initialized successfully.');
   } catch (error) {

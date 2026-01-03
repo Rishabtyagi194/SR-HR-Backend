@@ -1,14 +1,14 @@
 // services/jobsServices.js
 import { getRedisClient } from '../config/redisClient.js';
 import internshipQueries from '../queries/internshipJobQueries.js';
-import { invalidateJobCache } from '../utils/invalidateRedisCache.js';
+import { invalidateInternshipCache } from '../utils/invalidateRedisCache.js';
 const redis = getRedisClient();
 
 class internshipService {
   async createInternship(jobsData) {
     const internship = await internshipQueries.create(jobsData);
 
-    await invalidateJobCache(jobsData.company_id); // invalidate all list caches
+    await invalidateInternshipCache(jobsData.company_id); // invalidate all list caches
     return internship;
   }
 
@@ -29,7 +29,7 @@ class internshipService {
     const data = await internshipQueries.allInternship(page, limit, companyId);
 
     // Store in Redis with short TTL (5 min => 5 * 60s = 300)
-    await redis.set(cacheKey, JSON.stringify(data), 'EX', 600);
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 180);
 
     return data;
   }
@@ -54,7 +54,7 @@ class internshipService {
   //  Update a job and invalidate caches
   async updateInternship(id, updateData) {
     const job = await internshipQueries.updateInternshipById(id, updateData);
-    if (job) await invalidateJobCache(job.company_id, id);
+    if (job) await invalidateInternshipCache(job.company_id, id);
     return job;
   }
 
@@ -62,7 +62,7 @@ class internshipService {
   async deleteInternship(id) {
     const job = await internshipQueries.getInternshipById(id);
     const deleted = await internshipQueries.deleteInternshipById(id);
-    if (deleted && job) await invalidateJobCache(job.company_id, id);
+    if (deleted && job) await invalidateInternshipCache(job.company_id, id);
     return deleted;
   }
 }
