@@ -560,7 +560,7 @@ export const initializeDatabase = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
-        role ENUM('consultant_admin', 'consultant_staff') DEFAULT 'consultant_staff',
+        role ENUM('consultant_admin', 'consultant_staff') DEFAULT 'consultant_admin',
         email_otp VARCHAR(10),
         otp_expires_at DATETIME,
         is_mobile_verified BOOLEAN DEFAULT FALSE,
