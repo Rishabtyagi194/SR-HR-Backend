@@ -30,7 +30,7 @@ class JobsService {
     const data = await JobPostQueries.getAllJobs(page, limit, companyId);
 
     // Store in Redis 
-    await redis.set(cacheKey, JSON.stringify(data), 'EX', 600); // 10 min
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 180); // 5 min
 
     return data;
   }

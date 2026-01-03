@@ -81,16 +81,20 @@ class internshipQueries {
         [companyId],
       );
     } else {
-      // Client side → all jobs
-
+      // Client side all jobs
       [rows] = await getReadPool().query(
         `SELECT * FROM InternshipJobs 
+        WHERE LOWER(Status) = 'active'
         ORDER BY created_at DESC 
         LIMIT ? OFFSET ?`,
         [limit, offset],
       );
 
-      [[{ total }]] = await getReadPool().execute(`SELECT COUNT(*) as total FROM InternshipJobs`);
+      [[{ total }]] = await getReadPool().execute(`
+        SELECT COUNT(*) as total 
+        FROM InternshipJobs
+        WHERE Status = 'active'
+        `);
     }
 
     // attach total responses
