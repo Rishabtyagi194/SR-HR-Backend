@@ -37,13 +37,12 @@ export const createJobsController = async (req, res) => {
 
       // Questions field
       questions,
-      postedBy,
+      is_consultant_Job_Active,
       Status,
     } = req.body;
 
     // base payload
     let jobPayload = {
-      company_id: user.company_id,
       jobTitle,
       employmentType,
       skills,
@@ -60,7 +59,6 @@ export const createJobsController = async (req, res) => {
       jobDescription,
       AboutCompany,
 
-      // Walk-in details fields
       include_walk_in_details,
       walk_in_start_date,
       duration_days,
@@ -71,20 +69,30 @@ export const createJobsController = async (req, res) => {
       google_maps_url,
       contact_number,
 
-      // Questions field
       questions,
-      postedBy: user.email,
+      posted_by_email: user.email,
+      is_consultant_Job_Active,
       Status,
     };
+
     // console.log('REQ.USER', req.user);
 
     // role-based assignment
     if (user.role === 'employer_admin') {
+      jobPayload.postedBy = 'company';
+      jobPayload.organisation_id = user.organisation_id; // organisations.id
       jobPayload.employer_id = user.id;
       jobPayload.staff_id = null;
     } else if (user.role === 'employer_staff') {
+      jobPayload.postedBy = 'company';
+      jobPayload.organisation_id = user.organisation_id;
       jobPayload.staff_id = user.id;
       jobPayload.employer_id = null;
+    } else if (user.role === 'consultant_admin') {
+      jobPayload.postedBy = 'consultant';
+      jobPayload.organisation_id = user.organisation_id;
+      jobPayload.employer_id =  user.id;
+      jobPayload.staff_id = null;
     } else {
       return res.status(403).json({ message: 'unauthorized role to create jobs' });
     }
@@ -101,52 +109,82 @@ export const createJobsController = async (req, res) => {
   }
 };
 
+
+// list all jobs posted by employer   
+// export const getEmployerJobsController = async (req, res) => {
+//   try {
+//     const user = req.user;
+//     // console.log('user', user);
+
+//     if (!user.organisation_id) return res.status(400).json({ message: 'Missing organisation id for employer' });
+
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 10;
+
+//     const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit, user.organisation_id, true);
+
+//     res.status(200).json({
+//       message: 'Jobs fetched successfully',
+//       total,
+//       jobs, // includes total_responses count for each job
+//     });
+//   } catch (error) {
+//     console.error('getEmployerJobsController error:', error);
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
+
+
+export const getEmployerJobsController = async (req, res) => {
+  try {
+    const { role, organisation_id, id: userId } = req.user;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const { jobs, total } =
+      await hotVacancyJobsServices.listDashboardJobs(
+        page,
+        limit,
+        role,
+        organisation_id,
+        userId
+      );
+
+    res.status(200).json({
+      message: 'Jobs fetched successfully',
+      total,
+      jobs,
+    });
+  } catch (error) {
+    console.error('getEmployerJobsController error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // list all jobs for user
 export const ListAllJobsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
+    const role = req.user.role;
 
-    // If company_id is passed → dashboard view
-    // If not → client view (all jobs)
-    const companyId = req.user?.company_id || req.query.company_id || null;
-
-    const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit, companyId);
+    const { jobs, total } =
+      await hotVacancyJobsServices.listPublicJobs(page, limit, role);
 
     return res.status(200).json({
       message: 'Jobs fetched successfully',
       totalJobs: total,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
-      AllJobs: jobs,
+      jobs,
     });
   } catch (error) {
     console.error('ListAllJobsController error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
-// list all jobs for employer
-export const getEmployerJobsController = async (req, res) => {
-  try {
-    const user = req.user;
-    if (!user.company_id) return res.status(400).json({ message: 'Missing company id for employer' });
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const { jobs, total } = await hotVacancyJobsServices.listAllJobs(page, limit, user.company_id, true);
-
-    res.status(200).json({
-      message: 'Jobs fetched successfully',
-      total,
-      jobs, // includes total_responses count for each job
-    });
-  } catch (error) {
-    console.error('getEmployerJobsController error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
 
 // When employer clicks a specific job → show full responses + user profiles
 export const getSingleJobWithApplicationsController = async (req, res) => {
@@ -154,35 +192,37 @@ export const getSingleJobWithApplicationsController = async (req, res) => {
     const { jobId } = req.params;
     const user = req.user; // from Authenticate middleware
 
-    //First fetch the job company_id for access control
-    const [jobCheck] = await getReadPool().query(`SELECT company_id FROM HotVacancyJobs WHERE job_id = ?`, [jobId]);
+    //First fetch the job organisation_id for access control
+    const [jobCheck] = await getReadPool().query(`SELECT organisation_id FROM HotVacancyJobs WHERE job_id = ?`, [jobId]);
 
     if (!jobCheck.length) {
       return res.status(404).json({ message: 'Job not found' });
     }
 
-    const jobCompanyId = jobCheck[0].company_id;
+    // console.log("jobCheck" , jobCheck);
+    const joborganisationId = jobCheck[0].organisation_id;
 
-    // Allow only if the employer belongs to the same company
-    if (user.role.startsWith('employer') && user.company_id !== jobCompanyId) {
+    // Allow only if the employer belongs to the same organisation
+    if (user.role.startsWith('employer') && user.organisation_id !== joborganisationId) {
       return res.status(403).json({
         message: 'Unauthorized: you do not have access to this job',
       });
     }
 
     // Now fetch job + applications (since access is verified)
-    const job = await hotVacancyJobsQueries.getJobWithApplications(jobId, user.company_id);
+    const job = await hotVacancyJobsQueries.getJobWithApplications(jobId, user.organisation_id);
 
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    
     res.status(200).json({
       message: 'Job details with applications fetched successfully',
       job,
     });
   } catch (error) {
-    console.error('getSingleJobWithApplicationsController error:', error);
+    console.error('get Single Job With Applications Controller error:', error);
     res.status(500).json({
       message: 'Server error',
       error: error.message,

@@ -14,7 +14,7 @@ class EmployerQueries {
     const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // expires in 15 mins
 
     const values = [
-      userData.company_id ?? null,
+      userData.organisation_id ?? null,
       userData.employer_id ?? null,
       userData.name ?? null,
       userData.email ?? null,
@@ -29,7 +29,7 @@ class EmployerQueries {
 
     const [result] = await getWritePool().execute(
       `INSERT INTO employer_users 
-    (company_id, employer_id, name, email, password, phone, role, permissions, is_active, email_otp, otp_expires_at)
+    (organisation_id, employer_id, name, email, password, phone, role, permissions, is_active, email_otp, otp_expires_at)
    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       values,
     );
@@ -38,7 +38,7 @@ class EmployerQueries {
 
     return {
       id: result.insertId,
-      company_id: userData.company_id,
+      organisation_id: userData.organisation_id,
       name: userData.name,
       email: userData.email,
       role: userData.role || 'employer_admin',
@@ -46,9 +46,8 @@ class EmployerQueries {
     };
   }
 
-  // ------------------------------------------------------------
+  // ----------------------for login--------------------------------------
 
-  // for login
   async findByEmailOrPhone(identifier) {
     const query = isNaN(identifier) ? 'SELECT * FROM employer_users WHERE email = ?' : 'SELECT * FROM employer_users WHERE phone = ?';
 
@@ -56,17 +55,16 @@ class EmployerQueries {
     return rows.length > 0 ? new EmployerUser(rows[0]) : null;
   }
 
-  // ------------------------------------------------------------
+  // -------------------------get all employers-----------------------------------
 
-  // get all employers
+
   async findAllEmployers() {
     const [rows] = await getReadPool().execute('SELECT * FROM employer_users WHERE role = "employer_admin"');
     return rows.map((row) => new EmployerUser(row));
   }
 
-  // ------------------------------------------------------------
+  // -----------------------get all staff created by a specific employer-------------------------------------
 
-  // get all staff created by a specific employer
   async findAllStaffByEmployer(employerId) {
     const [rows] = await getReadPool().execute('SELECT * FROM employer_users WHERE role = "employer_staff" AND employer_id = ?', [
       employerId,
@@ -74,16 +72,17 @@ class EmployerQueries {
     return rows.map((row) => new EmployerUser(row));
   }
 
-  // ------------------------------------------------------------
+  // -------------------------get user by id-----------------------------------
 
-  // get user by id
   async findById(id, useMaster = false) {
     const pool = useMaster ? getWritePool() : getReadPool();
     const [rows] = await pool.execute('SELECT * FROM employer_users WHERE id = ?', [id]);
     return rows.length > 0 ? new EmployerUser(rows[0]) : null;
   }
 
-  // get staff by id under a specific employer
+
+  // ------------------------- get staff by id under a specific employer ----------------------------------
+ 
   async findStaffByIdAndEmployer(userId, employerId) {
     const [rows] = await getReadPool().execute(
       'SELECT * FROM employer_users WHERE id = ? AND employer_id = ? AND role = "employer_staff"',
@@ -92,9 +91,9 @@ class EmployerQueries {
     return rows.length > 0 ? new EmployerUser(rows[0]) : null;
   }
 
-  // ------------------------------------------------------------
+  // ---------------------------For super admin (can update any user)---------------------------------
 
-  // For super admin (can update any user)
+ 
   async updateUser(id, updateData) {
     const fields = [];
     const values = [];
@@ -133,7 +132,9 @@ class EmployerQueries {
     return result.affectedRows > 0;
   }
 
-  // For employer admin (can update only their own staff)
+
+
+  // --------------------- For employer admin (can update only their own staff) --------------------
   async updateUserByEmployer(id, employerId, updateData) {
     const fields = [];
     const values = [];
@@ -178,9 +179,9 @@ class EmployerQueries {
     return result.affectedRows > 0;
   }
 
-  // ------------------------------------------------------------
+  // -----------------------Delete employer/staff-------------------------------------
 
-  // Delete employer/staff
+ 
   async deleteUser(id) {
     const [result] = await getWritePool().execute('DELETE FROM employer_users WHERE id = ?', [id]);
     return result.affectedRows > 0;

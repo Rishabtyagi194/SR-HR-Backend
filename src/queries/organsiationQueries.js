@@ -1,22 +1,22 @@
-// src/queries/companyQueries.js
+// src/queries/organisationQueries.js
 import { getReadPool, getWritePool } from '../config/database.js';
-import Company from '../models/Companies.model.js';
+import Organisations from '../models/Organisations.model.js';
 
-class CompanyQueries {
-  async create(companyData) {
+class OrganisationQueries {
+  async create(organisationData) {
     const [result] = await getWritePool().execute(
-      `INSERT INTO companies 
+      `INSERT INTO organisations 
       (name, industry, size, website, logo_url, contact_email, contact_phone, address) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        companyData.name,
-        companyData.industry || null,
-        companyData.size || null,
-        companyData.website || null,
-        companyData.logo_url || null,
-        companyData.contact_email || null,
-        companyData.contact_phone || null,
-        companyData.address || null,
+        organisationData.name,
+        organisationData.industry || null,
+        organisationData.size || null,
+        organisationData.website || null,
+        organisationData.logo_url || null,
+        organisationData.contact_email || null,
+        organisationData.contact_phone || null,
+        organisationData.address || null,
       ],
     );
 
@@ -25,12 +25,12 @@ class CompanyQueries {
 
   async findById(id, useMaster = false) {
     const pool = useMaster ? getWritePool() : getReadPool();
-    const [rows] = await pool.execute('SELECT * FROM companies WHERE id = ?', [id]);
-    return rows.length > 0 ? new Company(rows[0]) : null;
+    const [rows] = await pool.execute('SELECT * FROM organisations WHERE id = ?', [id]);
+    return rows.length > 0 ? new Organisations(rows[0]) : null;
   }
 
-  async updateAdminUserId(companyId, adminUserId) {
-    await getWritePool().execute('UPDATE companies SET admin_user_id = ? WHERE id = ?', [adminUserId, companyId]);
+  async updateAdminUserId(organisationId, adminUserId) {
+    await getWritePool().execute('UPDATE organisations SET admin_user_id = ? WHERE id = ?', [adminUserId, organisationId]);
   }
 
   async findAll(query = {}, options = {}) {
@@ -64,7 +64,7 @@ class CompanyQueries {
 
     const [rows] = await pool.query(
       `SELECT c.*, eu.name as admin_name, eu.email as admin_email, eu.phone as admin_phone, eu.role as admin_role, eu.is_active as admin_active
-        FROM companies c
+        FROM organisations c
         LEFT JOIN employer_users eu ON c.admin_user_id = eu.id
         ${whereClause}
         ORDER BY ${sortBy} ${order}
@@ -80,10 +80,10 @@ class CompanyQueries {
     //   offsetValue: offset,
     // });
 
-    const [countRows] = await pool.execute(`SELECT COUNT(*) as total FROM companies c ${whereClause}`, params);
+    const [countRows] = await pool.execute(`SELECT COUNT(*) as total FROM organisations c ${whereClause}`, params);
 
     return {
-      companies: rows.map((row) => ({
+      organisations: rows.map((row) => ({
         id: row.id,
         name: row.name,
         industry: row.industry,
@@ -138,7 +138,7 @@ class CompanyQueries {
 
   //   const [rows] = await pool.execute(
   //     `SELECT c.*, eu.name as admin_name, eu.email as admin_email, eu.phone as admin_phone, eu.role as admin_role, eu.is_active as admin_active
-  //      FROM companies c
+  //      FROM organisations c
   //      LEFT JOIN employer_users eu ON c.admin_user_id = eu.id
   //      ${whereClause}
   //      ORDER BY ${sortBy} ${order}
@@ -148,10 +148,10 @@ class CompanyQueries {
 
   //   console.log('Pagination debug:', { limit, offset, params });
 
-  //   const [countRows] = await pool.execute(`SELECT COUNT(*) as total FROM companies c ${whereClause}`, params);
+  //   const [countRows] = await pool.execute(`SELECT COUNT(*) as total FROM organisations c ${whereClause}`, params);
 
   //   return {
-  //     companies: rows.map((row) => ({
+  //     organisations: rows.map((row) => ({
   //       id: row.id,
   //       name: row.name,
   //       industry: row.industry,
@@ -176,10 +176,10 @@ class CompanyQueries {
   //   };
   // }
 
-  async deleteCompanyById(id) {
-    const [result] = await getWritePool().execute('DELETE FROM companies WHERE id = ?', [id]);
+  async deleteorganisationById(id) {
+    const [result] = await getWritePool().execute('DELETE FROM organisations WHERE id = ?', [id]);
     return result.affectedRows > 0;
   }
 }
 
-export default new CompanyQueries();
+export default new OrganisationQueries();

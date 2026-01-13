@@ -8,29 +8,33 @@ class internshipService {
   async createInternship(jobsData) {
     const internship = await internshipQueries.create(jobsData);
 
-    await invalidateInternshipCache(jobsData.company_id); // invalidate all list caches
+    await invalidateInternshipCache(jobsData.organisation_id); // invalidate all list caches
     return internship;
   }
 
-  // Paginated list of all jobs (with Redis cache)
-  async listAllInternship(page = 1, limit = 10, companyId = null) {
-    const cacheKey = companyId ? `internships:list:${companyId}:${page}:${limit}` : `internships:list:all:${page}:${limit}`;
-    // console.log('cacheKey', cacheKey);
+  async listDashboardInternships(page, limit, role, organisationId, userId) {
+    const cacheKey = role.endsWith('_staff')
+      ? `dashboard:internships:${role}:${userId}:${page}:${limit}`
+      : `dashboard:internships:${role}:${organisationId}:${page}:${limit}`;
 
     const cached = await redis.get(cacheKey);
-    // console.log('cached', cached);
+    if (cached) return JSON.parse(cached);
 
-    if (cached) {
-      console.log(`Redis cache hit → ${cacheKey}`);
-      return JSON.parse(cached); // Returns it immediately, without querying the database.
-    }
+    const data = await internshipQueries.getDashboardInternships(page, limit, role, organisationId, userId);
 
-    console.log(`Cache miss → fetching from DB...`);
-    const data = await internshipQueries.allInternship(page, limit, companyId);
-
-    // Store in Redis with short TTL (5 min => 5 * 60s = 300)
     await redis.set(cacheKey, JSON.stringify(data), 'EX', 180);
+    return data;
+  }
 
+  async listPublicInternships(page, limit, role) {
+    const cacheKey = `public:internships:${role}:${page}:${limit}`;
+
+    const cached = await redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    const data = await internshipQueries.getPublicInternships(page, limit, role);
+
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 180);
     return data;
   }
 
@@ -47,14 +51,14 @@ class internshipService {
     const job = await internshipQueries.getInternshipById(jobId);
     if (!job) return null;
 
-    await redis.set(cacheKey, JSON.stringify(job), 'EX', 300); // 5 min TTL
+    await redis.set(cacheKey, JSON.stringify(job), 'EX', 180); // 5 min TTL
     return job;
   }
 
   //  Update a job and invalidate caches
   async updateInternship(id, updateData) {
     const job = await internshipQueries.updateInternshipById(id, updateData);
-    if (job) await invalidateInternshipCache(job.company_id, id);
+    if (job) await invalidateInternshipCache(job.organisation_id, id);
     return job;
   }
 
@@ -62,7 +66,7 @@ class internshipService {
   async deleteInternship(id) {
     const job = await internshipQueries.getInternshipById(id);
     const deleted = await internshipQueries.deleteInternshipById(id);
-    if (deleted && job) await invalidateInternshipCache(job.company_id, id);
+    if (deleted && job) await invalidateInternshipCache(job.organisation_id, id);
     return deleted;
   }
 }

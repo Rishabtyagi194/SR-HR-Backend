@@ -5,21 +5,54 @@ import {
   getAllCompanyApplications,
   getApplicationsForJob,
   getUserAllAppliedJobs,
+  uploadResumeOnJobController,
 } from '../controllers/jobApplicationController.js';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
+import upload from '../middleware/fileUploadMiddleware.js';
+import { getAllApplicationsUploadedByConsultant, getJobByJobIdAndOrgIdController, getMyUploadedJobsController } from '../controllers/consultantApplicationController.js';
 
 const router = express.Router();
 
-// Apply for job
-router.post('/:category/:jobId/apply', Authenticate, applyForJobController);
+// ----------------------------------  Users  ---------------------------------
 
-// Employer views applications for a specific job
-router.get('/:category/:jobId/all-applications', Authenticate, getApplicationsForJob);
-
-// Employer views all applications for all jobs in their company
-router.get('/company/all', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), getAllCompanyApplications);
+// User apply for job
+router.post('/:category/:jobId/apply', Authenticate, authorizeRoles('job_seeker'), applyForJobController);
 
 // Get all jobs applied by the current user
 router.get('/user/all-applied/jobs', Authenticate, getUserAllAppliedJobs);
+
+
+// ---------------------------------- Employer  ---------------------------------
+
+// Employer views applications/response for a specific job
+router.get('/:category/:jobId/all-applications', Authenticate, getApplicationsForJob);
+
+// Employer views all applications/response for all jobs in their company
+router.get('/company/all', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), getAllCompanyApplications);
+
+
+// ---------------------------------- Consultant ---------------------------------
+
+// Consultant upload resume on a particular job 
+router.post('/:category/:jobId/consultant/submit-resume', Authenticate, 
+  authorizeRoles('consultant_admin', 'consultant_staff'),
+  upload.array('resumes', 5),
+  uploadResumeOnJobController);
+
+// Employer views all jobs on which consultant uploaded resume 
+router.get('/consultant/all/submitted-resume', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), getAllApplicationsUploadedByConsultant);
+
+router.get('/consultant/uploaded-resume/on-jobs',Authenticate,
+  authorizeRoles('consultant_admin', 'consultant_staff'),
+  getMyUploadedJobsController
+);
+
+
+router.get('/consultant/:employer_org_id/:job_ref_id',Authenticate,
+  authorizeRoles('consultant_admin', 'consultant_staff'),
+  getJobByJobIdAndOrgIdController
+);
+
+
 
 export default router;

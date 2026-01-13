@@ -3,31 +3,53 @@ import { scanKeys } from './scanKeys.js';
 
 const redis = getRedisClient();
 
-export const invalidateJobCache = async (companyId) => {
-  // console.log("companyId", companyId);
-  
-  // Use SCAN instead of KEYS
-  const allKeys = [...(await scanKeys(redis, `hotvacancy:list:all:*`)), ...(await scanKeys(redis, `hotvacancy:list:${companyId}:*`))];
+/**
+ * Invalidate ALL Hot Vacancy job caches
+ * Call this when:
+ * - Job is created
+ * - Job is updated
+ * - Job status changes
+ * - is_consultant_Job_Active changes
+ */
+export const invalidateJobCache = async () => {
+  const patterns = [
+    'public:jobs:*',
+    'dashboard:jobs:*'
+  ];
+
+  let allKeys = [];
+
+  for (const pattern of patterns) {
+    const keys = await scanKeys(redis, pattern);
+    allKeys.push(...keys);
+  }
 
   if (allKeys.length > 0) {
     await redis.del(...allKeys);
-    console.log(`Hotvacancy Cache invalidated (${allKeys.length} keys)`);
+    console.log(`HotVacancy cache invalidated (${allKeys.length} keys)`);
   } else {
-    console.log('No matching cache keys found to invalidate.');
+    console.log('No HotVacancy cache keys found.');
   }
 };
 
 
-export const invalidateInternshipCache = async (companyId) => {
-  // console.log("companyId", companyId);
-  
-  // Use SCAN instead of KEYS
-  const allKeys = [...(await scanKeys(redis, `internships:list:all:*`)), ...(await scanKeys(redis, `internships:list:${companyId}:*`))];
+export const invalidateInternshipCache = async () => {
+  const patterns = [
+    'public:internships:*',
+    'dashboard:internships:*'
+  ];
+
+  let allKeys = [];
+
+  for (const pattern of patterns) {
+    const keys = await scanKeys(redis, pattern);
+    allKeys.push(...keys);
+  }
 
   if (allKeys.length > 0) {
     await redis.del(...allKeys);
-    console.log(`Internship Cache invalidated (${allKeys.length} keys)`);
+    console.log(`Internship cache invalidated (${allKeys.length} keys)`);
   } else {
-    console.log('No matching cache keys found to invalidate.');
+    console.log('No Internship cache keys found.');
   }
 };

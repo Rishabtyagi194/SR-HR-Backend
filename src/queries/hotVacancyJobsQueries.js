@@ -14,120 +14,345 @@ class jobQueries {
 
     const sql = `
     INSERT INTO HotVacancyJobs (
-        company_id, employer_id, staff_id, jobTitle, employmentType, skills,
+        organisation_id, employer_id, staff_id, jobTitle, employmentType, skills,
         CompanyIndustry, workMode, jobLocation, willingToRelocate, locality, 
         experinceFrom, experinceTo, salaryRangeFrom, salaryRangeTo, qualification, 
         jobDescription, AboutCompany, include_walk_in_details, walk_in_start_date,
         walk_in_start_time, walk_in_end_time, contact_person, venue, google_maps_url,
-        duration_days, contact_number, questions, postedBy, Status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        duration_days, contact_number, questions, posted_by_email, postedBy, is_consultant_Job_Active, Status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const values = [
-      dbObject.company_id,
-      dbObject.employer_id,
-      dbObject.staff_id,
-      dbObject.jobTitle,
-      dbObject.employmentType,
-      dbObject.skills,
-      dbObject.CompanyIndustry,
-      dbObject.workMode,
-      dbObject.jobLocation,
-      dbObject.willingToRelocate,
-      dbObject.locality,
-      dbObject.experinceFrom,
-      dbObject.experinceTo,
-      dbObject.salaryRangeFrom,
-      dbObject.salaryRangeTo,
-      dbObject.qualification,
-      dbObject.jobDescription,
-      dbObject.AboutCompany,
-      dbObject.include_walk_in_details,
-      dbObject.walk_in_start_date,
-      dbObject.walk_in_start_time,
-      dbObject.walk_in_end_time,
-      dbObject.contact_person,
-      dbObject.venue,
-      dbObject.google_maps_url,
-      dbObject.duration_days,
-      dbObject.contact_number,
-      dbObject.questions,
-      dbObject.postedBy,
-      dbObject.Status || 'draft',
-    ];
+    // const values = [
+    //   dbObject.organisation_id,
+    //   dbObject.consultant_agency_id,
+    //   dbObject.employer_id,
+    //   dbObject.staff_id,
+    //   dbObject.consultant_user_id,
+    //   dbObject.jobTitle,
+    //   dbObject.employmentType,
+    //   dbObject.skills,
+    //   dbObject.CompanyIndustry,
+    //   dbObject.workMode,
+    //   dbObject.jobLocation,
+    //   dbObject.willingToRelocate,
+    //   dbObject.locality,
+    //   dbObject.experinceFrom,
+    //   dbObject.experinceTo,
+    //   dbObject.salaryRangeFrom,
+    //   dbObject.salaryRangeTo,
+    //   dbObject.qualification,
+    //   dbObject.jobDescription,
+    //   dbObject.AboutCompany,
+    //   dbObject.include_walk_in_details,
+    //   dbObject.walk_in_start_date,
+    //   dbObject.walk_in_start_time,
+    //   dbObject.walk_in_end_time,
+    //   dbObject.contact_person,
+    //   dbObject.venue,
+    //   dbObject.google_maps_url,
+    //   dbObject.duration_days,
+    //   dbObject.contact_number,
+    //   dbObject.questions,
+    //   dbObject.postedBy,
+    //   dbObject.Status || 'draft',
+    // ];
 
     // console.log('FINAL Status before insert:', dbObject.Status);
+
+    const values = [
+      dbObject.organisation_id ?? null,
+      dbObject.employer_id ?? null,
+      dbObject.staff_id ?? null,
+
+      dbObject.jobTitle ?? null,
+      dbObject.employmentType ?? null,
+      JSON.stringify(dbObject.skills ?? []),
+      dbObject.CompanyIndustry ?? null,
+      dbObject.workMode ?? null,
+      JSON.stringify(dbObject.jobLocation ?? []),
+      dbObject.willingToRelocate ?? false,
+      dbObject.locality ?? null,
+
+      dbObject.experinceFrom ?? null,
+      dbObject.experinceTo ?? null,
+      dbObject.salaryRangeFrom ?? null,
+      dbObject.salaryRangeTo ?? null,
+      JSON.stringify(dbObject.qualification ?? []),
+
+      dbObject.jobDescription ?? null,
+      dbObject.AboutCompany ?? null,
+
+      dbObject.include_walk_in_details ?? false,
+      dbObject.walk_in_start_date ?? null,
+      dbObject.walk_in_start_time ?? null,
+      dbObject.walk_in_end_time ?? null,
+      dbObject.contact_person ?? null,
+      dbObject.venue ?? null,
+      dbObject.google_maps_url ?? null,
+
+      dbObject.duration_days ?? 1,
+      dbObject.contact_number ?? null,
+      JSON.stringify(dbObject.questions ?? []),
+
+      dbObject.posted_by_email,
+      dbObject.postedBy,
+      dbObject.is_consultant_Job_Active ?? false,
+      dbObject.Status ?? 'draft',
+    ];
+
+    if (values.includes(undefined)) {
+      console.error('Undefined value found in insert:', values);
+      throw new Error('One or more required fields are undefined');
+    }
     const [result] = await getWritePool().execute(sql, values);
 
     // Return the complete job using fromDatabaseRow for proper parsing
     return await this.getJobById(result.insertId);
   }
 
-  async getAllJobs(page = 1, limit = 10, companyId = null, includeApplications = false) {
+  // async getAllJobs(page = 1, limit = 10, organisationId = null, role = null) {
+  //   const offset = (page - 1) * limit;
+
+  //   let rows, total;
+
+  //   if (organisationId) {
+  //     [rows] = await getReadPool().query(
+  //       `SELECT * FROM HotVacancyJobs
+  //        WHERE organisation_id = ?
+  //        ORDER BY created_at DESC
+  //        LIMIT ? OFFSET ?`,
+  //       [organisationId, limit, offset],
+  //     );
+
+  //     [[{ total }]] = await getReadPool().execute(
+  //       `
+  //       SELECT COUNT(*) as total FROM HotVacancyJobs WHERE organisation_id = ?`,
+  //       [organisationId],
+  //     );
+  //   } else {
+  //     // Client side all jobs
+  //     [rows] = await getReadPool().query(
+  //       `
+  //     SELECT * FROM HotVacancyJobs
+  //     WHERE LOWER(Status) = 'active'
+  //     ORDER BY created_at DESC
+  //     LIMIT ? OFFSET ?
+  //     `,
+  //       [limit, offset],
+  //     );
+
+  //     [[{ total }]] = await getReadPool().execute(
+  //       `
+  //     SELECT COUNT(*) AS total
+  //     FROM HotVacancyJobs
+  //     WHERE Status = 'active'
+  //     `,
+  //     );
+  //   }
+
+  //   // attach total responses
+  //   if (includeApplications && rows.length > 0) {
+  //     const jobIds = rows.map((j) => j.job_id);
+  //     const [counts] = await getReadPool().query(jobApplicationQueries.getApplicationsCountByJobIds, [jobIds]);
+
+  //     // convert to map for fast lookup
+  //     const countMap = {};
+  //     for (const c of counts) countMap[c.job_id] = c.total_applications;
+
+  //     // attach counts
+  //     for (const job of rows) {
+  //       job.total_applications = countMap[job.job_id] || 0;
+  //     }
+  //   }
+
+  //   return { jobs: rows, total };
+  // }
+
+  // async getAllJobs(page = 1, limit = 10, organisationId = null, role = null) {
+  //   const offset = (page - 1) * limit;
+  //   let rows, total;
+
+  //   // ===============================
+  //   // EMPLOYER / CONSULTANT DASHBOARD
+  //   // ===============================
+  //   if (organisationId && role !== 'job_seeker') {
+  //     [rows] = await getReadPool().query(
+  //       `
+  //     SELECT *
+  //     FROM HotVacancyJobs
+  //     WHERE organisation_id = ?
+  //     ORDER BY created_at DESC
+  //     LIMIT ? OFFSET ?
+  //     `,
+  //       [organisationId, limit, offset],
+  //     );
+
+  //     [[{ total }]] = await getReadPool().execute(
+  //       `
+  //     SELECT COUNT(*) AS total
+  //     FROM HotVacancyJobs
+  //     WHERE organisation_id = ?
+  //     `,
+  //       [organisationId],
+  //     );
+
+  //     return { jobs: rows, total };
+  //   }
+
+  //   // ===============================
+  //   // JOB SEEKER (PUBLIC USER)
+  //   // ===============================
+  //   if (role === 'job_seeker') {
+  //     [rows] = await getReadPool().query(
+  //       `
+  //     SELECT *
+  //     FROM HotVacancyJobs
+  //     WHERE Status = 'active'
+  //       AND (
+  //         postedBy = 'company'
+  //         OR postedBy = 'consultant'
+  //       )
+  //     ORDER BY created_at DESC
+  //     LIMIT ? OFFSET ?
+  //     `,
+  //       [limit, offset],
+  //     );
+
+  //     [[{ total }]] = await getReadPool().execute(
+  //       `
+  //     SELECT COUNT(*) AS total
+  //     FROM HotVacancyJobs
+  //     WHERE Status = 'active'
+  //       AND (
+  //         postedBy = 'company'
+  //         OR postedBy = 'consultant'
+  //       )
+  //     `,
+  //     );
+
+  //     return { jobs: rows, total };
+  //   }
+
+  //   // ===============================
+  //   // CONSULTANT (PUBLIC + OWN)
+  //   // ===============================
+  //   if (role === 'consultant_admin') {
+  //     [rows] = await getReadPool().query(
+  //       `
+  //     SELECT *
+  //     FROM HotVacancyJobs
+  //     WHERE Status = 'active'
+  //       AND (
+  //         postedBy = 'consultant'
+  //         OR (postedBy = 'company' AND is_consultant_Job_Active = 1)
+  //       )
+  //     ORDER BY created_at DESC
+  //     LIMIT ? OFFSET ?
+  //     `,
+  //       [limit, offset],
+  //     );
+
+  //     [[{ total }]] = await getReadPool().execute(
+  //       `
+  //     SELECT COUNT(*) AS total
+  //     FROM HotVacancyJobs
+  //     WHERE Status = 'active'
+  //       AND (
+  //         postedBy = 'consultant'
+  //         OR (postedBy = 'company' AND is_consultant_Job_Active = 1)
+  //       )
+  //     `,
+  //     );
+
+  //     return { jobs: rows, total };
+  //   }
+
+  //   return { jobs: [], total: 0 };
+  // }
+
+  async getDashboardJobs(page, limit, role, organisationId, userId) {
     const offset = (page - 1) * limit;
+    let where = '';
+    let params = [];
 
-    let rows, total;
-
-    if (companyId) {
-      [rows] = await getReadPool().query(
-        `SELECT * FROM HotVacancyJobs 
-         WHERE company_id = ? 
-         ORDER BY created_at DESC 
-         LIMIT ? OFFSET ?`,
-        [companyId, limit, offset],
-      );
-
-      [[{ total }]] = await getReadPool().execute(
-        `
-        SELECT COUNT(*) as total FROM HotVacancyJobs WHERE company_id = ?`,
-        [companyId],
-      );
+    if (role.endsWith('_admin')) {
+      where = 'organisation_id = ?';
+      params = [organisationId];
     } else {
-      // Client side all jobs
-
-     [rows] = await getReadPool().query(
-      `
-      SELECT * FROM HotVacancyJobs
-      WHERE LOWER(Status) = 'active'
-      ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
-      `,
-      [limit, offset],
-    );
-
-
-    [[{ total }]] = await getReadPool().execute(
-      `
-      SELECT COUNT(*) AS total
-      FROM HotVacancyJobs
-      WHERE Status = 'active'
-      `
-    );
+      where = 'organisation_id = ? AND (employer_id = ? OR staff_id = ?)';
+      params = [organisationId, userId, userId];
     }
 
-    // attach total responses
-    if (includeApplications && rows.length > 0) {
-      const jobIds = rows.map((j) => j.job_id);
-      const [counts] = await getReadPool().query(jobApplicationQueries.getApplicationsCountByJobIds, [jobIds]);
+    const [rows] = await getReadPool().query(
+      `
+    SELECT *
+    FROM HotVacancyJobs
+    WHERE ${where}
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+    `,
+      [...params, limit, offset],
+    );
 
-      // convert to map for fast lookup
-      const countMap = {};
-      for (const c of counts) countMap[c.job_id] = c.total_applications;
-
-      // attach counts
-      for (const job of rows) {
-        job.total_applications = countMap[job.job_id] || 0;
-      }
-    }
+    const [[{ total }]] = await getReadPool().execute(
+      `
+    SELECT COUNT(*) AS total
+    FROM HotVacancyJobs
+    WHERE ${where}
+    `,
+      params,
+    );
 
     return { jobs: rows, total };
   }
 
-  async getJobWithApplications(jobId, companyId = null) {
+  async getPublicJobs(page, limit, role) {
+    const offset = (page - 1) * limit;
+    let condition = '';
+
+    if (role === 'job_seeker') {
+      condition = `
+      Status = 'active'
+      AND (postedBy = 'company' OR postedBy = 'consultant')
+    `;
+    } else {
+      // consultant_admin / consultant_staff
+      condition = `
+      Status = 'active'
+      AND ( postedBy = 'company' AND is_consultant_Job_Active = 1)
+    `;
+    }
+
+    const [rows] = await getReadPool().query(
+      `
+    SELECT *
+    FROM HotVacancyJobs
+    WHERE ${condition}
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+    `,
+      [limit, offset],
+    );
+
+    const [[{ total }]] = await getReadPool().execute(
+      `
+    SELECT COUNT(*) AS total
+    FROM HotVacancyJobs
+    WHERE ${condition}
+    `,
+    );
+
+    return { jobs: rows, total };
+  }
+
+  async getJobWithApplications(jobId, organisationId = null) {
     // fetch job
-    const [jobRows] = companyId
-      ? await getReadPool().query(`SELECT * FROM HotVacancyJobs WHERE job_id = ? AND company_id = ?`, [jobId, companyId])
+    const [jobRows] = organisationId
+      ? await getReadPool().query(`SELECT * FROM HotVacancyJobs WHERE job_id = ? AND organisation_id = ?`, [jobId, organisationId])
       : await getReadPool().query(`SELECT * FROM HotVacancyJobs WHERE job_id = ?`, [jobId]);
+
+    // console.log("jobRows", jobRows);
 
     if (!jobRows.length) return null;
     const job = jobRows[0];
@@ -151,8 +376,25 @@ class jobQueries {
       app.profile = { educations, experiences, skills };
     }
 
-    job.applications = applications;
-    job.total_applications = applications.length;
+    // CONSULTANT applications
+    const [consultantApplications] = await getReadPool().query(jobApplicationQueries.getConsultantApplicationsByHotVacancyJobId, [
+      jobId,
+      job.organisation_id,
+    ]);
+
+    // Parse resumes JSON safely
+    const parsedConsultantApplications = consultantApplications.map((app) => ({
+      ...app,
+      resumes: Array.isArray(app.resumes) ? app.resumes : JSON.parse(app.resumes || '[]'),
+    }));
+
+    // Attach everything
+    job.user_applications = applications;
+    job.consultant_applications = parsedConsultantApplications;
+
+    job.total_user_applications = applications.length;
+    job.total_consultant_applications = parsedConsultantApplications.length;
+    job.total_applications = applications.length + parsedConsultantApplications.length;
 
     return job;
   }
