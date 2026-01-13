@@ -28,13 +28,13 @@ export const createInternshipJobsController = async (req, res) => {
       receivedResponseOverMail,
       addResponseCode,
       AboutCompany,
-      postedBy,
+      is_consultant_Job_Active,
       Status,
     } = req.body;
 
     // base payload
     let jobPayload = {
-      company_id: user.company_id,
+      organisation_id: user.organisation_id,
       internshipTitle,
       employmentType,
       duration,
@@ -55,17 +55,29 @@ export const createInternshipJobsController = async (req, res) => {
       receivedResponseOverMail,
       addResponseCode,
       AboutCompany,
-      postedBy: user.email,
+
+      posted_by_email: user.email,
+      is_consultant_Job_Active,
       Status,
     };
 
     // role-based assignment
+
     if (user.role === 'employer_admin') {
+      jobPayload.postedBy = 'company';
+      jobPayload.organisation_id = user.organisation_id; // organisations.id
       jobPayload.employer_id = user.id;
       jobPayload.staff_id = null;
     } else if (user.role === 'employer_staff') {
+      jobPayload.postedBy = 'company';
+      jobPayload.organisation_id = user.organisation_id;
       jobPayload.staff_id = user.id;
       jobPayload.employer_id = null;
+    } else if (user.role === 'consultant_admin') {
+      jobPayload.postedBy = 'consultant';
+      jobPayload.organisation_id = user.organisation_id;
+      jobPayload.employer_id = user.id;
+      jobPayload.staff_id = null;
     } else {
       return res.status(403).json({ message: 'unauthorized role to create jobs' });
     }
@@ -82,16 +94,34 @@ export const createInternshipJobsController = async (req, res) => {
   }
 };
 
-export const ListAllInternshipJobsController = async (req, res) => {
+// list all jobs for employer
+export const getEmployerInternshipController = async (req, res) => {
   try {
+    const { role, organisation_id, id: userId } = req.user;
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    // If company_id is passed → dashboard view
-    // If not → client view (all jobs)
-    const companyId = req.user?.company_id || req.query.company_id || null;
+    const { jobs, total } = await internshipJobsServices.listDashboardInternships(page, limit, role, organisation_id, userId);
 
-    const { jobs, total } = await internshipJobsServices.listAllInternship(page, limit, companyId);
+    res.status(200).json({
+      message: 'Internship fetched successfully',
+      total,
+      jobs, // includes total_responses count for each job
+    });
+  } catch (error) {
+    console.error('getEmployerInternshipController error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const ListAllInternshipJobsController = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const role = req.user.role;
+    
+    const { jobs, total } = await internshipJobsServices.listPublicInternships(page, limit, role);
 
     return res.status(200).json({
       message: 'Jobs fetched successfully',
@@ -106,52 +136,30 @@ export const ListAllInternshipJobsController = async (req, res) => {
   }
 };
 
-// list all jobs for employer
-export const getEmployerInternshipController = async (req, res) => {
-  try {
-    const user = req.user;
-    if (!user.company_id) return res.status(400).json({ message: 'Missing company id for employer' });
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const { jobs, total } = await internshipJobsServices.listAllInternship(page, limit, user.company_id, true);
-
-    res.status(200).json({
-      message: 'Internship fetched successfully',
-      total,
-      jobs, // includes total_responses count for each job
-    });
-  } catch (error) {
-    console.error('getEmployerInternshipController error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
 // When employer clicks a specific job → show full responses + user profiles
 export const getSingleInternshipWithApplicationsController = async (req, res) => {
   try {
     const { jobId } = req.params;
     const user = req.user; // from Authenticate middleware
 
-    //First fetch the job company_id for access control
-    const [internshipCheck] = await getReadPool().query(`SELECT company_id FROM InternshipJobs WHERE job_id = ?`, [jobId]);
+    //First fetch the job organisation_id for access control
+    const [internshipCheck] = await getReadPool().query(`SELECT organisation_id FROM InternshipJobs WHERE job_id = ?`, [jobId]);
 
     if (!internshipCheck.length) {
       return res.status(404).json({ message: 'Internship not found' });
     }
 
-    const jobCompanyId = internshipCheck[0].company_id;
+    const jobCompanyId = internshipCheck[0].organisation_id;
 
     // Allow only if the employer belongs to the same company
-    if (user.role.startsWith('employer') && user.company_id !== jobCompanyId) {
+    if (user.role.startsWith('employer') && user.organisation_id !== jobCompanyId) {
       return res.status(403).json({
         message: 'Unauthorized: you do not have access to this job',
       });
     }
 
     // Now fetch job + applications (since access is verified)
-    const job = await internshipJobQueries.getInternshipWithApplications(jobId, user.company_id);
+    const job = await internshipJobQueries.getInternshipWithApplications(jobId, user.organisation_id);
 
     if (!job) {
       return res.status(404).json({ message: 'Internship not found' });

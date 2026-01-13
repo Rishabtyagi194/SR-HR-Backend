@@ -8,7 +8,7 @@ import { generateKeywords } from '../services/llmService.js';
 //     const { keywords = [], minExpYears, maxExpYears, location, preferredLocation, noticePeriod, expectedSalary, boolean } = req.body;
 
 //     const employerId = req.user.id;
-//     const companyId = req.user.company_id;
+//     const companyId = req.user.organisation_id;
 
 //     const mainKeyword = keywords[0] || null;
 //     let query = `
@@ -33,7 +33,7 @@ import { generateKeywords } from '../services/llmService.js';
 //   JOIN job_applications ON users.id = job_applications.user_id
 //   LEFT JOIN user_profiles ON users.id = user_profiles.user_id
 //   LEFT JOIN user_skills ON users.id = user_skills.user_id
-//   WHERE job_applications.company_id = ?
+//   WHERE job_applications.organisation_id = ?
 // `;
 
 //     const params = [companyId];
@@ -102,7 +102,7 @@ import { generateKeywords } from '../services/llmService.js';
 //       boolean = "AND",         // AND / OR between keywords
 //     } = req.body;
 
-//     const companyId = req.user.company_id;
+//     const companyId = req.user.organisation_id;
 
 //     let query = `
 //       SELECT
@@ -126,7 +126,7 @@ import { generateKeywords } from '../services/llmService.js';
 //         ON users.id = user_profiles.user_id
 //       LEFT JOIN user_skills
 //         ON users.id = user_skills.user_id
-//       WHERE job_applications.company_id = ?
+//       WHERE job_applications.organisation_id = ?
 //     `;
 
 //     const params = [companyId];

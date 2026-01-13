@@ -15,9 +15,11 @@ export const employerLogin = async (req, res) => {
       id: employer.id,
       email: employer.email,
       role: employer.role,
-      company_id: employer.company_id,
+      organisation_id: employer.organisation_id,
       permissions: employer.permissions,
     });
+
+    
     res.status(200).json({
       message: 'Login successful',
       token,
@@ -27,7 +29,7 @@ export const employerLogin = async (req, res) => {
         email: employer.email,
         phone: employer.phone,
         role: employer.role,
-        company_id: employer.company_id,
+        organisation_id: employer.organisation_id,
         last_login: new Date(),
         login_history: employer.loginHistory,
       },
@@ -54,7 +56,7 @@ export const createEmployerStaff = async (req, res) => {
       phone,
       password,
       role: role || 'employer_staff',
-      company_id: user.company_id, // from token
+      organisation_id: user.organisation_id, // from token
       employer_id: user.id, // the employer creating staff
     });
 
@@ -79,7 +81,7 @@ export const listAllEmployers = async (req, res) => {
         name: emp.name,
         email: emp.email,
         phone: emp.phone,
-        company_id: emp.company_id,
+        organisation_id: emp.organisation_id,
         role: emp.role,
         isActive: emp.isActive,
         login_history: emp.loginHistory,
@@ -106,7 +108,7 @@ export const listAllStaffs = async (req, res) => {
         name: staff.name,
         email: staff.email,
         phone: staff.phone,
-        company_id: staff.company_id,
+        organisation_id: staff.organisation_id,
         employer_id: staff.employer_id,
         role: staff.role,
         isActive: staff.isActive,
@@ -134,7 +136,7 @@ export const getUserById = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        company_id: user.company_id,
+        organisation_id: user.organisation_id,
         employer_id: user.employer_id,
         role: user.role,
         isActive: user.isActive,
@@ -159,7 +161,7 @@ export const updateUser = async (req, res) => {
         name: updatedUser.name,
         email: updatedUser.email,
         phone: updatedUser.phone,
-        company_id: updatedUser.company_id,
+        organisation_id: updatedUser.organisation_id,
         role: updatedUser.role,
         isActive: updatedUser.isActive,
       },

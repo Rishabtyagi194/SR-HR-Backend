@@ -1,5 +1,5 @@
 // src/models/Company.js
-class Company {
+class Organisations {
   constructor({
     id,
     name,
@@ -34,10 +34,10 @@ class Company {
 
   validate() {
     if (!this.name || !this.contact_email) {
-      throw new Error('Company name and contact email are required');
+      throw new Error('Organisations name and contact email are required');
     }
     return true;
   }
 }
 
-export default Company;
+export default Organisations;

@@ -9,41 +9,55 @@ class internshipQueries {
 
     const sql = `
     INSERT INTO InternshipJobs (
-      company_id, employer_id, staff_id, internshipTitle, employmentType,
+      organisation_id, employer_id, staff_id, internshipTitle, employmentType,
       duration, internshipStartDate, OfferStipend, workMode,
       intershipLocation, willingToRelocate, CompanyIndustry, perksAndBenefit,
       noOfVacancies, skills, qualification, videoProfile, jobDescription,
       lastDateToApply, collabrateWithTeam, receivedResponseOverMail,
-      addResponseCode, AboutCompany, postedBy, Status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      addResponseCode, AboutCompany, posted_by_email, postedBy, is_consultant_Job_Active, Status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
-      dbObject.company_id,
-      dbObject.employer_id,
-      dbObject.staff_id,
-      dbObject.internshipTitle,
-      dbObject.employmentType,
-      dbObject.duration,
-      dbObject.internshipStartDate,
-      dbObject.OfferStipend,
-      dbObject.workMode,
-      dbObject.intershipLocation,
-      dbObject.willingToRelocate,
-      dbObject.CompanyIndustry,
-      dbObject.perksAndBenefit,
-      dbObject.noOfVacancies,
-      dbObject.skills,
-      dbObject.qualification,
-      dbObject.videoProfile,
-      dbObject.jobDescription,
-      dbObject.lastDateToApply,
-      dbObject.collabrateWithTeam,
-      dbObject.receivedResponseOverMail,
-      dbObject.addResponseCode,
-      dbObject.AboutCompany,
-      dbObject.postedBy,
-      dbObject.Status || 'draft',
+      dbObject.organisation_id ?? null,
+      dbObject.employer_id ?? null,
+      dbObject.staff_id ?? null,
+
+      dbObject.internshipTitle ?? null,
+      dbObject.employmentType ?? null,
+      dbObject.duration ?? null,
+      dbObject.internshipStartDate ?? null,
+      dbObject.OfferStipend ?? null,
+      dbObject.workMode ?? null,
+
+      // JSON fields (ALWAYS stringify)
+      JSON.stringify(dbObject.intershipLocation ?? []),
+
+      dbObject.willingToRelocate ?? false,
+      dbObject.CompanyIndustry ?? null,
+      dbObject.perksAndBenefit ?? null,
+      dbObject.noOfVacancies ?? null,
+
+      JSON.stringify(dbObject.skills ?? []),
+      dbObject.qualification ?? null,
+
+      dbObject.videoProfile ?? null,
+      dbObject.jobDescription ?? null,
+      dbObject.lastDateToApply ?? null,
+
+      JSON.stringify(dbObject.collabrateWithTeam ?? []),
+
+      dbObject.receivedResponseOverMail ?? null,
+      dbObject.addResponseCode ?? null,
+      dbObject.AboutCompany ?? null,
+
+      dbObject.posted_by_email ?? null,
+      dbObject.postedBy, // 'company' or 'consultant'
+
+      dbObject.is_consultant_Job_Active ?? false,
+
+      // Status (use ?? not ||)
+      dbObject.Status ?? 'draft',
     ];
 
     if (values.includes(undefined)) {
@@ -59,66 +73,142 @@ class internshipQueries {
     return await this.getInternshipById(result.insertId);
   }
 
-  async allInternship(page = 1, limit = 10, companyId = null, includeApplications = false) {
+  // async allInternship(page = 1, limit = 10, companyId = null, includeApplications = false) {
+  //   const offset = (page - 1) * limit;
+
+  //   let rows, total;
+
+  //   if (companyId) {
+  //     // Dashboard → only jobs for that organization
+  //     [rows] = await getReadPool().query(
+  //       `SELECT * FROM InternshipJobs 
+  //       WHERE organisation_id = ? 
+  //       ORDER BY created_at DESC 
+  //       LIMIT ? OFFSET ?`,
+  //       [companyId, limit, offset],
+  //     );
+
+  //     //total jobs
+  //     [[{ total }]] = await getReadPool().execute(
+  //       `
+  //       SELECT COUNT(*) as total FROM InternshipJobs WHERE organisation_id = ?`,
+  //       [companyId],
+  //     );
+  //   } else {
+  //     // Client side all jobs
+  //     [rows] = await getReadPool().query(
+  //       `SELECT * FROM InternshipJobs 
+  //       WHERE LOWER(Status) = 'active'
+  //       ORDER BY created_at DESC 
+  //       LIMIT ? OFFSET ?`,
+  //       [limit, offset],
+  //     );
+
+  //     [[{ total }]] = await getReadPool().execute(`
+  //       SELECT COUNT(*) as total 
+  //       FROM InternshipJobs
+  //       WHERE Status = 'active'
+  //       `);
+  //   }
+
+  //   // attach total responses
+  //   if (includeApplications && rows.length > 0) {
+  //     const jobIds = rows.map((j) => j.job_id);
+  //     const [counts] = await getReadPool().query(jobApplicationQueries.getApplicationsCountByJobIds, [jobIds]);
+
+  //     // convert to map for fast lookup
+  //     const countMap = {};
+  //     for (const c of counts) countMap[c.job_id] = c.total_applications;
+
+  //     // attach counts
+  //     for (const job of rows) {
+  //       job.total_applications = countMap[job.job_id] || 0;
+  //     }
+  //   }
+
+  //   return { jobs: rows, total };
+  // }
+
+  async getDashboardInternships(page, limit, role, organisationId, userId) {
     const offset = (page - 1) * limit;
+    let where = '';
+    let params = [];
 
-    let rows, total;
-
-    if (companyId) {
-      // Dashboard → only jobs for that organization
-      [rows] = await getReadPool().query(
-        `SELECT * FROM InternshipJobs 
-        WHERE company_id = ? 
-        ORDER BY created_at DESC 
-        LIMIT ? OFFSET ?`,
-        [companyId, limit, offset],
-      );
-
-      //total jobs
-      [[{ total }]] = await getReadPool().execute(
-        `
-        SELECT COUNT(*) as total FROM InternshipJobs WHERE company_id = ?`,
-        [companyId],
-      );
+    if (role.endsWith('_admin')) {
+      where = 'organisation_id = ?';
+      params = [organisationId];
     } else {
-      // Client side all jobs
-      [rows] = await getReadPool().query(
-        `SELECT * FROM InternshipJobs 
-        WHERE LOWER(Status) = 'active'
-        ORDER BY created_at DESC 
-        LIMIT ? OFFSET ?`,
-        [limit, offset],
-      );
-
-      [[{ total }]] = await getReadPool().execute(`
-        SELECT COUNT(*) as total 
-        FROM InternshipJobs
-        WHERE Status = 'active'
-        `);
+      where = 'organisation_id = ? AND (employer_id = ? OR staff_id = ?)';
+      params = [organisationId, userId, userId];
     }
 
-    // attach total responses
-    if (includeApplications && rows.length > 0) {
-      const jobIds = rows.map((j) => j.job_id);
-      const [counts] = await getReadPool().query(jobApplicationQueries.getApplicationsCountByJobIds, [jobIds]);
+    const [rows] = await getReadPool().query(
+      `
+    SELECT *
+    FROM InternshipJobs
+    WHERE ${where}
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+    `,
+      [...params, limit, offset],
+    );
 
-      // convert to map for fast lookup
-      const countMap = {};
-      for (const c of counts) countMap[c.job_id] = c.total_applications;
-
-      // attach counts
-      for (const job of rows) {
-        job.total_applications = countMap[job.job_id] || 0;
-      }
-    }
+    const [[{ total }]] = await getReadPool().execute(
+      `
+    SELECT COUNT(*) AS total
+    FROM InternshipJobs
+    WHERE ${where}
+    `,
+      params,
+    );
 
     return { jobs: rows, total };
   }
 
+  async getPublicInternships(page, limit, role) {
+    const offset = (page - 1) * limit;
+    let condition = '';
+
+    if (role === 'job_seeker') {
+      condition = `
+      Status = 'active'
+      AND (postedBy = 'company' OR postedBy = 'consultant')
+    `;
+    } else {
+      // consultant_admin / consultant_staff
+      condition = `
+      Status = 'active'
+      AND ( postedBy = 'company' AND is_consultant_Job_Active = 1)
+    `;
+    }
+
+    const [rows] = await getReadPool().query(
+      `
+    SELECT *
+    FROM InternshipJobs
+    WHERE ${condition}
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+    `,
+      [limit, offset],
+    );
+
+    const [[{ total }]] = await getReadPool().execute(
+      `
+    SELECT COUNT(*) AS total
+    FROM InternshipJobs
+    WHERE ${condition}
+    `,
+    );
+
+    return { jobs: rows, total };
+  }
+
+
   async getInternshipWithApplications(jobId, companyId = null) {
     // fetch job
     const [internshipRows] = companyId
-      ? await getReadPool().query(`SELECT * FROM InternshipJobs WHERE job_id = ? AND company_id = ?`, [jobId, companyId])
+      ? await getReadPool().query(`SELECT * FROM InternshipJobs WHERE job_id = ? AND organisation_id = ?`, [jobId, companyId])
       : await getReadPool().query(`SELECT * FROM InternshipJobs WHERE job_id = ?`, [jobId]);
 
     if (!internshipRows.length) return null;
@@ -143,8 +233,26 @@ class internshipQueries {
       app.profile = { educations, experiences, skills };
     }
 
-    job.applications = applications;
-    job.total_applications = applications.length;
+  // CONSULTANT applications
+    const [consultantApplications] = await getReadPool().query(jobApplicationQueries.getConsultantApplicationsByInternshipJobId, [
+      jobId,
+      job.organisation_id,
+    ]);
+
+    // Parse resumes JSON safely
+    const parsedConsultantApplications = consultantApplications.map((app) => ({
+      ...app,
+      resumes: Array.isArray(app.resumes) ? app.resumes : JSON.parse(app.resumes || '[]'),
+    }));
+
+    // Attach everything
+    job.user_applications = applications;
+    job.consultant_applications = parsedConsultantApplications;
+
+    job.total_user_applications = applications.length;
+    job.total_consultant_applications = parsedConsultantApplications.length;
+    job.total_applications = applications.length + parsedConsultantApplications.length;
+
 
     return job;
   }

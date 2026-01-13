@@ -1,17 +1,20 @@
 // queries/jobApplicationQueries.js
 
 export const jobApplicationQueries = {
+  // applied by user on any jobs
   insertApplication: `
   INSERT INTO job_applications (
-    user_id, employer_id, company_id, job_category, hotvacancy_job_id, internship_job_id
+    user_id, employer_id, organisation_id, job_category, hotvacancy_job_id, internship_job_id
   ) VALUES (?, ?, ?, ?, ?, ?)
 `,
 
+  // store answer of the applied job
   insertAnswer: `
     INSERT INTO job_application_answers (application_id, question_text, answer_text)
     VALUES (?, ?, ?)
   `,
 
+  // total count of the application
   getApplicationsCountByJobIds: `
     SELECT job_id, COUNT(*) AS total_applications
     FROM job_applications
@@ -19,7 +22,7 @@ export const jobApplicationQueries = {
     GROUP BY job_id
   `,
 
-  // Fetch each application with FULL user details
+  // Fetch each application with FULL user details for Hot vacancy
   getApplicationsWithFullUserDataByHotVacancyJobId: `
     SELECT 
       ja.id AS application_id,
@@ -45,7 +48,7 @@ export const jobApplicationQueries = {
     ORDER BY ja.applied_at DESC
   `,
 
-  //  Internship applications
+  // Fetch each application with FULL user details for Internship applications
   getApplicationsWithFullUserDataByInternshipJobId: `
     SELECT 
       ja.id AS application_id,
@@ -71,7 +74,6 @@ export const jobApplicationQueries = {
     ORDER BY ja.applied_at DESC
   `,
 
-
   // to fetch all response on all jobs
   getAllCompanyApplications: `
     SELECT 
@@ -79,7 +81,7 @@ export const jobApplicationQueries = {
       ja.job_category,
       ja.application_status,
       ja.applied_at,
-      ja.company_id,
+      ja.organisation_id,
       u.full_name,
       u.email,
       u.phone,
@@ -120,17 +122,18 @@ export const jobApplicationQueries = {
     LEFT JOIN HotVacancyJobs hj ON ja.hotvacancy_job_id = hj.job_id
     LEFT JOIN InternshipJobs ij ON ja.internship_job_id = ij.job_id
     
-    WHERE ja.company_id = ?
+    WHERE ja.organisation_id = ?
     ORDER BY ja.applied_at DESC
   `,
 
+  // get questions for an application
   getAnswersByApplicationId: `
     SELECT question_text, answer_text 
     FROM job_application_answers 
     WHERE application_id = ?
   `,
 
-  // get all applied applicatio for users
+  // get all applied application for users
   getUserAllAppliedJobs: `
   SELECT 
     ja.id AS application_id,
@@ -139,10 +142,10 @@ export const jobApplicationQueries = {
     ja.applied_at,
     ja.hotvacancy_job_id,
     ja.internship_job_id,
-    ja.company_id,
+    ja.organisation_id,
     c.name AS name
   FROM job_applications ja
-  LEFT JOIN companies c ON ja.company_id = c.id
+  LEFT JOIN organisations c ON ja.organisation_id = c.id
   WHERE ja.user_id = ?
   ORDER BY ja.applied_at DESC
 `,
@@ -150,7 +153,7 @@ export const jobApplicationQueries = {
   getHotVacancyJobDetails: `
   SELECT 
     job_id,
-    company_id,
+    organisation_id,
     employer_id,
     jobTitle,
     employmentType,
@@ -187,7 +190,7 @@ export const jobApplicationQueries = {
   getInternshipJobDetails: `
   SELECT 
     job_id,
-    company_id,
+    organisation_id,
     employer_id,
     internshipTitle,
     employmentType,
@@ -221,18 +224,153 @@ export const jobApplicationQueries = {
     SELECT degree, specialization, institute_name, start_year, end_year, percentage
     FROM user_education WHERE user_id = ?
   `,
+
   getUserExperiences: `
     SELECT company_name, job_title, start_date, end_date, currently_working, description
     FROM user_experience WHERE user_id = ?
   `,
+
   getUserSkills: `
     SELECT skill_name, proficiency_level
     FROM user_skills WHERE user_id = ?
   `,
+
+
+  // ------------------------------ consultant ------------------------------------
+
+  getConsultantApplicationsByHotVacancyJobId: `
+  SELECT
+    cja.id AS application_id,
+    cja.job_ref_id,
+    cja.job_category,
+    cja.consultant_user_id,
+    cja.consultant_org_id,
+    cja.employer_org_id,
+    cja.application_status,
+    cja.posted_by_consultant,
+    cja.posted_by_consultant_email,
+    cja.resumes,
+    cja.applied_at
+  FROM consultant_job_applications cja
+  WHERE
+    cja.job_category = 'HotVacancy'
+    AND cja.job_ref_id = ?
+    AND cja.employer_org_id = ?
+  ORDER BY cja.applied_at DESC
+`,
+
+  getConsultantApplicationsByInternshipJobId: `
+  SELECT
+    cja.id AS application_id,
+    cja.job_ref_id,
+    cja.job_category,
+    cja.consultant_user_id,
+    cja.consultant_org_id,
+    cja.employer_org_id,
+    cja.application_status,
+    cja.posted_by_consultant,
+    cja.posted_by_consultant_email,
+    cja.resumes,
+    cja.applied_at
+  FROM consultant_job_applications cja
+  WHERE
+    cja.job_category = 'Internship'
+    AND cja.job_ref_id = ?
+    AND cja.employer_org_id = ?
+  ORDER BY cja.applied_at DESC
+`,
+
+// see applied jobs by consultant
+getConsultantUploadedJobs: `
+  SELECT
+    cja.id AS application_id,
+    cja.job_ref_id,
+    cja.employer_org_id,
+    cja.consultant_user_id,
+    cja.job_category,
+    cja.application_status,
+    cja.applied_at,
+    cja.updated_at,
+
+    JSON_LENGTH(cja.resumes) AS total_resumes,
+
+    -- Employer
+    org.name AS employer_name,
+
+    -- Hot Vacancy Job
+    hj.jobTitle AS hotvacancy_title,
+    hj.workMode AS hotvacancy_work_mode,
+    hj.locality AS hotvacancy_location,
+
+    -- Internship Job
+    ij.internshipTitle AS internship_title,
+    ij.workMode AS internship_work_mode,
+    ij.intershipLocation AS internship_location
+
+  FROM consultant_job_applications cja
+  JOIN organisations org ON cja.employer_org_id = org.id
+
+  LEFT JOIN HotVacancyJobs hj
+    ON cja.job_category = 'HotVacancy'
+    AND cja.job_ref_id = hj.job_id
+
+  LEFT JOIN InternshipJobs ij
+    ON cja.job_category = 'Internship'
+    AND cja.job_ref_id = ij.job_id
+
+  WHERE cja.consultant_user_id = ?
+  ORDER BY cja.applied_at DESC
+`, 
+
+
+getHotVacancyJobByJobIdAndOrgId: `
+    SELECT
+      job_id,
+      organisation_id,
+      employer_id,
+      staff_id,
+      category,
+      jobTitle,
+      employmentType,
+      skills,
+      CompanyIndustry,
+      workMode,
+      jobLocation,
+      willingToRelocate,
+      locality,
+      experinceFrom,
+      experinceTo,
+      salaryRangeFrom,
+      salaryRangeTo,
+      qualification,
+      jobDescription,
+      AboutCompany,
+      include_walk_in_details,
+      walk_in_start_date,
+      duration_days,
+      walk_in_start_time,
+      walk_in_end_time,
+      contact_person,
+      contact_number,
+      venue,
+      google_maps_url,
+      questions,
+      posted_by_email,
+      postedBy,
+      is_consultant_Job_Active,
+      Status,
+      created_at,
+      updated_at
+    FROM HotVacancyJobs
+    WHERE job_id = ?
+      AND organisation_id = ?
+    LIMIT 1
+  `
+  
 };
 
 // export const jobApplicationQueries = {
-//   insertApplication: `INSERT INTO job_applications (job_id, user_id, employer_id, company_id) VALUES (?, ?, ?, ?)`,
+//   insertApplication: `INSERT INTO job_applications (job_id, user_id, employer_id, organisation_id) VALUES (?, ?, ?, ?)`,
 
 //   insertAnswer: `INSERT INTO job_application_answers (application_id, question_text, answer_text) VALUES (?, ?, ?)`,
 

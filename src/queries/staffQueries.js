@@ -11,7 +11,7 @@ class StaffQueries {
     const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
     const values = [
-      staffData.company_id ?? null,
+      staffData.organisation_id ?? null,
       staffData.employer_id ?? null,
       staffData.name,
       staffData.email,
@@ -26,7 +26,7 @@ class StaffQueries {
 
     const [result] = await getWritePool().execute(
       `INSERT INTO employer_users 
-       (company_id, employer_id, name, email, password, phone, role, permissions, is_active, email_otp, otp_expires_at) 
+       (organisation_id, employer_id, name, email, password, phone, role, permissions, is_active, email_otp, otp_expires_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       values,
     );
@@ -37,7 +37,7 @@ class StaffQueries {
     return {
       message: 'Verififcation OTP sent to email. Please verify your email.',
       id: result.insertId,
-      company_id: staffData.company_id,
+      organisation_id: staffData.organisation_id,
       employer_id: staffData.employer_id,
       name: staffData.name,
       email: staffData.email,

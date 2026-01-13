@@ -9,12 +9,12 @@ class UploadQueries {
     try {
       await connection.beginTransaction();
 
-      const values = records.map((r) => [r.company_id, r.uploaded_by, r.uploaded_by_role, r.data_json]);
+      const values = records.map((r) => [r.organisation_id, r.uploaded_by, r.uploaded_by_role, r.data_json]);
 
       await connection.query(
         `
         INSERT INTO Excel_data_uploads 
-        (company_id, uploaded_by, uploaded_by_role, data_json)
+        (organisation_id, uploaded_by, uploaded_by_role, data_json)
         VALUES ?
         `,
         [values],
@@ -38,7 +38,7 @@ class UploadQueries {
     let sql = `
       SELECT id, data_json
       FROM Excel_data_uploads
-      WHERE company_id = ?
+      WHERE organisation_id = ?
         AND (
     `;
 
@@ -68,7 +68,7 @@ class UploadQueries {
   async findByCompany(companyId) {
     const [rows] = await getWritePool().query(
       `SELECT * FROM Excel_data_uploads 
-       WHERE company_id = ? ORDER BY created_at DESC`,
+       WHERE organisation_id = ? ORDER BY created_at DESC`,
       [companyId],
     );
     return rows;

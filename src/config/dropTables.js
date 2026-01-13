@@ -12,7 +12,7 @@ export const dropAllTables = async () => {
       // 'plan_options',
       // 'subscription_categories',
       // 'admins',
-      // 'companies',
+      // 'organisations',
       // 'employer_users',
       // 'HotVacancyJobs',
       // 'InternshipJobs',
@@ -26,12 +26,15 @@ export const dropAllTables = async () => {
       // 'user_logs',
       // 'job_application_answers',
       // 'job_applications',
-      // 'resume',
-      // 'resumes1',
+      // 'resumes',
       // 'resume_skills',
       // 'resume_education',
       // 'resume_experience',
-      // 'saved_jobs'
+      // 'saved_jobs',
+      // 'search_keywords_history',
+      // 'consultant_agencies',
+      // 'consultant_users',
+      'consultant_job_applications',
     ];
 
     for (const table of tables) {

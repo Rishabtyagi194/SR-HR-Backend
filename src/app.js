@@ -5,7 +5,7 @@ import morgan from 'morgan';
 // Import routes
 import adminRoutes from './routes/superAdminRoutes.js';
 // import authRoutes from './routes/authRoutes.js';
-import companyRoutes from './routes/companyRoutes.js';
+import organisationRoutes from './routes/organisationRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
 import hotVacancyJobsRoutes from './routes/hotVacancyJobsRoutes.js';
@@ -18,6 +18,7 @@ import uploadResume from './routes/resumeRoutes.js';
 import searchRoutes from './routes/searchFilterRoutes.js';
 import saveJobsRoutes from './routes/savedJobRoutes.js';
 import LocationRoutes from './routes/locationRoutes.js'
+import consultantRoutes from './routes/consultantAuthRoutes.js'
 
 const app = express();
 
@@ -40,7 +41,7 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
-app.use('/api/company', companyRoutes);
+app.use('/api/organisation', organisationRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/jobs/applications', jobApplication);
 app.use('/api/jobs', hotVacancyJobsRoutes);
@@ -52,5 +53,6 @@ app.use('/api/excel', uploadExcel);
 app.use('/api/search', searchRoutes);
 app.use('/api/savejob', saveJobsRoutes);
 app.use('/api/location', LocationRoutes);
+app.use('/api/consultant', consultantRoutes);
 
 export default app;

@@ -2,7 +2,7 @@
 class EmployerUser {
   constructor(row) {
     this.id = Number(row.id);
-    this.company_id = Number(row.company_id);
+    this.organisation_id = Number(row.organisation_id);
     this.name = row.name;
     this.email = row.email;
     this.password = row.password;
@@ -23,7 +23,7 @@ export default EmployerUser;
 // class EmployerUser {
 //   constructor({
 //     id,
-//     company_id,
+//     organisation_id,
 //     admin_id,
 //     name,
 //     email,
@@ -38,7 +38,7 @@ export default EmployerUser;
 //     updated_at,
 //   }) {
 //     this.id = Number(id);
-//     this.company_id = company_id;
+//     this.organisation_id = organisation_id;
 //     this.admin_id = admin_id;
 //     this.name = name;
 //     this.email = email;
@@ -54,7 +54,7 @@ export default EmployerUser;
 //   }
 
 //   validate() {
-//     if (!this.name || !this.email || !this.password || !this.company_id) {
+//     if (!this.name || !this.email || !this.password || !this.organisation_id) {
 //       throw new Error('Name, email, password, and company ID are required');
 //     }
 //     return true;

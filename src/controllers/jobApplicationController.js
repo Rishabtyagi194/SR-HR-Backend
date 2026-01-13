@@ -1,4 +1,6 @@
+import { getReadPool } from '../config/database.js';
 import jobApplicationService from '../services/jobApplicationService.js';
+import { getFileHash, uploadConsultantResume } from '../utils/cloudinary/consultantResumeUploader.js';
 
 // Apply on a particular job
 export const applyForJobController = async (req, res) => {
@@ -78,19 +80,19 @@ export const getApplicationsForJob = async (req, res) => {
   }
 };
 
-//  get app applications/response for a particular company/employer
+//  get applications/response for a particular organisation/employer
 export const getAllCompanyApplications = async (req, res) => {
   try {
     const user = req.user;
 
-    if (!user.company_id) {
+    if (!user.organisation_id) {
       return res.status(400).json({
         success: false,
         message: 'Invalid employer. Missing company information.',
       });
     }
 
-    const applications = await jobApplicationService.getAllCompanyApplications(user.company_id);
+    const applications = await jobApplicationService.getAllCompanyApplications(user.organisation_id);
 
     res.status(200).json({
       success: true,
@@ -129,4 +131,184 @@ export const getUserAllAppliedJobs = async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
+};
+// ----------------------------------------- consultant ------------------------------------------
+// consultant uploads resume on a particular job
+// export const uploadResumeOnJobController = async (req, res) => {
+//   try {
+//     const { jobId, category } = req.params;
+//     const user = req.user;
+
+//     if (!req.files || req.files.length === 0) {
+//       return res.status(400).json({ message: 'No files uploaded' });
+//     }
+
+//     const results = [];
+
+//     for (const file of req.files) {
+//       const uploadResult = await uploadConsultantResume(file.path);
+
+//       const data = await jobApplicationService.uploadResume({
+//         user,
+//         resumeUrl: uploadResult.secure_url,
+//         resumePublicId: uploadResult.public_id,
+//         jobId,
+//         category,
+//       });
+
+//       results.push(data);
+//     }
+
+//     res.status(201).json({
+//       message: 'Resumes submitted successfully',
+//       count: results.length,
+//       data: results,
+//     });
+//   } catch (error) {
+//     if (error.message === 'DUPLICATE_FILE') {
+//       return res.status(409).json({
+//         message: 'One or more resumes were already uploaded',
+//       });
+//     }
+
+//     console.error(error);
+//     res.status(500).json({ message: 'Failed to upload resumes' });
+//   }
+// };
+
+// export const uploadResumeOnJobController = async (req, res) => {
+//   const { jobId, category } = req.params;
+//   const user = req.user;
+
+//   if (!req.files || req.files.length === 0) {
+//     return res.status(400).json({ message: 'No files uploaded' });
+//   }
+
+//   const uploaded = [];
+//   const rejected = [];
+
+//   for (const file of req.files) {
+//     try {
+//       const uploadResult = await uploadConsultantResume(file.path);
+
+//       const data = await jobApplicationService.uploadResume({
+//         user,
+//         resumeUrl: uploadResult.secure_url,
+//         resumePublicId: uploadResult.public_id,
+//         jobId,
+//         category,
+//       });
+
+//       uploaded.push(data);
+//     } catch (err) {
+//       if (
+//         err.message === 'DUPLICATE_RESUME' ||
+//         err.message === 'DUPLICATE_FILE'
+//       ) {
+//         rejected.push(file.originalname);
+//       } else {
+//         throw err;
+//       }
+//     }
+//   }
+
+//   return res.status(201).json({
+//     message: 'Resume upload completed',
+//     uploaded_count: uploaded.length,
+//     rejected_count: rejected.length,
+//     uploaded,
+//     rejected,
+//   });
+// };
+
+
+export const uploadResumeOnJobController = async (req, res) => {
+  const { jobId } = req.params;
+  const user = req.user;
+
+  // Normalize category (CRITICAL)
+  const rawCategory = req.params.category;
+  const category =
+    rawCategory === 'HotVacancy'
+      ? 'HotVacancy'
+      : rawCategory === 'Internship'
+      ? 'Internship'
+      : null;
+
+  if (!category) {
+    return res.status(400).json({ message: 'Invalid job category' });
+  }
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: 'No files uploaded' });
+  }
+
+  const uploaded = [];
+  const rejected = [];
+
+  // Check if application row already exists
+  const [existingRows] = await getReadPool().execute(
+    `
+    SELECT resumes
+    FROM consultant_job_applications
+    WHERE consultant_user_id = ?
+      AND job_category = ?
+      AND job_ref_id = ?
+    `,
+    [user.id, category, jobId]
+  );
+
+  const hasApplicationRow = existingRows.length > 0;
+
+  for (const file of req.files) {
+    try {
+      // Generate hash
+      const hash = getFileHash(file.path);
+      const publicId = `consultant_resumes/${hash}`;
+
+      // Duplicate resume check (ONLY if row exists)
+      if (hasApplicationRow) {
+        const [[duplicate]] = await getReadPool().execute(
+          `
+          SELECT 1
+          FROM consultant_job_applications
+          WHERE consultant_user_id = ?
+            AND job_category = ?
+            AND job_ref_id = ?
+            AND JSON_SEARCH(resumes, 'one', ?, NULL, '$[*].public_id') IS NOT NULL
+          `,
+          [user.id, category, jobId, publicId]
+        );
+
+        if (duplicate) {
+          rejected.push(file.originalname);
+          continue;
+        }
+      }
+
+      // Upload to Cloudinary
+      const uploadResult = await uploadConsultantResume(file.path, hash);
+
+      // Insert / append in DB
+      const data = await jobApplicationService.uploadResume({
+        user,
+        jobId,
+        category,
+        resumeUrl: uploadResult.secure_url,
+        resumePublicId: uploadResult.public_id,
+      });
+
+      uploaded.push(data);
+    } catch (err) {
+      rejected.push(file.originalname);
+    }
+  }
+
+  return res.status(201).json({
+    message: 'Resume upload completed',
+    uploaded_count: uploaded.length,
+    rejected_count: rejected.length,
+    uploaded,
+    rejected,
+  });
 };
