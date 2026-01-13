@@ -222,12 +222,104 @@ export const getUserAllAppliedJobs = async (req, res) => {
 // };
 
 
+// export const uploadResumeOnJobController = async (req, res) => {
+//   const { jobId, category: rawCategory } = req.params;
+//   const user = req.user;
+
+//   // Normalize category
+//   // const rawCategory = req.params.category;
+//   const category =
+//     rawCategory === 'HotVacancy'
+//       ? 'HotVacancy'
+//       : rawCategory === 'Internship'
+//       ? 'Internship'
+//       : null;
+
+//   if (!category) {
+//     return res.status(400).json({ message: 'Invalid job category' });
+//   }
+
+//   if (!req.files || req.files.length === 0) {
+//     return res.status(400).json({ message: 'No files uploaded' });
+//   }
+
+//   const uploaded = [];
+//   const rejected = [];
+
+//   // Check if application row already exists
+//   const [existingRows] = await getReadPool().execute(
+//     `
+//     SELECT resumes
+//     FROM consultant_job_applications
+//     WHERE consultant_user_id = ?
+//       AND job_category = ?
+//       AND job_ref_id = ?
+//     `,
+//     [user.id, category, jobId]
+//   );
+
+//   const hasApplicationRow = existingRows.length > 0;
+
+//   for (const file of req.files) {
+//     try {
+//       // Generate hash
+//       const hash = getFileHash(file.path);
+//       const publicId = `consultant_resumes/${hash}`;
+
+//       // Duplicate resume check (ONLY if row exists)
+//       if (hasApplicationRow) {
+//         const [[duplicate]] = await getReadPool().execute(
+//           `
+//           SELECT 1
+//           FROM consultant_job_applications
+//           WHERE consultant_user_id = ?
+//             AND job_category = ?
+//             AND job_ref_id = ?
+//             AND JSON_SEARCH(resumes, 'one', ?, NULL, '$[*].public_id') IS NOT NULL
+//           `,
+//           [user.id, category, jobId, publicId]
+//         );
+
+//         if (duplicate) {
+//           rejected.push(file.originalname);
+//           continue;
+//         }
+//       }
+
+//       // Upload to Cloudinary
+//       const uploadResult = await uploadConsultantResume(file.path, hash);
+
+//       // Insert / append in DB
+//       const data = await jobApplicationService.uploadResume({
+//         user,
+//         jobId,
+//         category,
+//         resumeUrl: uploadResult.secure_url,
+//         resumePublicId: uploadResult.public_id,
+//       });
+
+//       uploaded.push(data);
+//     } catch (err) {
+//       rejected.push(file.originalname);
+//     }
+//   }
+
+//   return res.status(201).json({
+//     message: 'Resume upload completed',
+//     uploaded_count: uploaded.length,
+//     rejected_count: rejected.length,
+//     uploaded,
+//     rejected,
+//   });
+// };
+
+
+
 export const uploadResumeOnJobController = async (req, res) => {
-  const { jobId } = req.params;
+  const { jobId, category: rawCategory } = req.params;
   const user = req.user;
 
-  // Normalize category (CRITICAL)
-  const rawCategory = req.params.category;
+  // Normalize category
   const category =
     rawCategory === 'HotVacancy'
       ? 'HotVacancy'
@@ -246,51 +338,34 @@ export const uploadResumeOnJobController = async (req, res) => {
   const uploaded = [];
   const rejected = [];
 
-  // Check if application row already exists
-  const [existingRows] = await getReadPool().execute(
-    `
-    SELECT resumes
-    FROM consultant_job_applications
-    WHERE consultant_user_id = ?
-      AND job_category = ?
-      AND job_ref_id = ?
-    `,
-    [user.id, category, jobId]
-  );
-
-  const hasApplicationRow = existingRows.length > 0;
-
   for (const file of req.files) {
     try {
-      // Generate hash
       const hash = getFileHash(file.path);
       const publicId = `consultant_resumes/${hash}`;
 
-      // Duplicate resume check (ONLY if row exists)
-      if (hasApplicationRow) {
-        const [[duplicate]] = await getReadPool().execute(
-          `
-          SELECT 1
-          FROM consultant_job_applications
-          WHERE consultant_user_id = ?
-            AND job_category = ?
-            AND job_ref_id = ?
-            AND JSON_SEARCH(resumes, 'one', ?, NULL, '$[*].public_id') IS NOT NULL
-          `,
-          [user.id, category, jobId, publicId]
-        );
+      // ✅ ALWAYS check duplicate per file (NO cached flag)
+      const [[duplicate]] = await getReadPool().execute(
+        `
+        SELECT 1
+        FROM consultant_job_applications
+        WHERE consultant_user_id = ?
+          AND job_category = ?
+          AND job_ref_id = ?
+          AND JSON_SEARCH(resumes, 'one', ?, NULL, '$[*].public_id') IS NOT NULL
+        `,
+        [user.id, category, jobId, publicId]
+      );
 
-        if (duplicate) {
-          rejected.push(file.originalname);
-          continue;
-        }
+      if (duplicate) {
+        rejected.push(file.originalname);
+        continue;
       }
 
       // Upload to Cloudinary
       const uploadResult = await uploadConsultantResume(file.path, hash);
 
-      // Insert / append in DB
-      const data = await jobApplicationService.uploadResume({
+      // Insert / append resume
+      const resume = await jobApplicationService.uploadResume({
         user,
         jobId,
         category,
@@ -298,8 +373,9 @@ export const uploadResumeOnJobController = async (req, res) => {
         resumePublicId: uploadResult.public_id,
       });
 
-      uploaded.push(data);
+      uploaded.push(resume);
     } catch (err) {
+      console.error('Resume upload failed:', err);
       rejected.push(file.originalname);
     }
   }

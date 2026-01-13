@@ -5,11 +5,7 @@ import {
 } from '../queries/consultantApplicationQueries.js';
 import { jobApplicationQueries } from '../queries/jobApplicationQueries.js';
 
-export const listApplicationsUploadedByConsultant = async ({
-  employerOrgId,
-  limit,
-  offset,
-}) => {
+export const listApplicationsUploadedByConsultant = async ({  employerOrgId,  limit,  offset,}) => {
   // HARD SAFETY
   const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 10;
   const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
@@ -28,7 +24,6 @@ export const listApplicationsUploadedByConsultant = async ({
 
   return { applications, total };
 };
-
 
 export const getConsultantUploadedJobs = async (consultantUserId) => {
   const [rows] = await getReadPool().query(
@@ -61,7 +56,6 @@ export const getConsultantUploadedJobs = async (consultantUserId) => {
     updated_at: row.updated_at
   }));
 };
-
 
 // get job by org id, job id and job category
 export const getJobByJobIdAndOrgId = async (jobRefId, employerOrgId) => {
