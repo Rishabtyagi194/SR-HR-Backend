@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { Authenticate } from '../middleware/authMiddleware.js';
+import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 import {
   createInternshipJobsController,
   deleteInternshipJobsController,
@@ -13,13 +13,27 @@ import {
 
 const router = express.Router();
 
-router.post('/create', Authenticate, createInternshipJobsController);
+// create internship
+router.post('/create', Authenticate,  authorizeRoles('employer_admin', 'employer_staff', 'consultant_admin', 'consultant_staff'), createInternshipJobsController);
+
+// Get all posted internships for employer (HR, consultant) 
+router.get('/employer-internships', Authenticate,  authorizeRoles('employer_admin', 'employer_staff', 'consultant_admin', 'consultant_staff'), getEmployerInternshipController); // Get all posted jobs (with total responses)
+
+// View full internship + applications(response) + profiles
+router.get('/employer-internship/:jobId', Authenticate, getSingleInternshipWithApplicationsController); // View full job + applications(response) + profiles
+
+// Get all internships user/consultant(public view)
 router.get('/all-internships', Authenticate, ListAllInternshipJobsController);
+
+// View single internship detail
 router.get('/get-internship/:id', getInternshipJobsByIdController);
+
+
+// update internship
 router.patch('/update/:id', Authenticate, updateInternshipJobsController);
+
+// delete internship 
 router.delete('/delete/:id', Authenticate, deleteInternshipJobsController);
 
-router.get('/employer-internships', Authenticate, getEmployerInternshipController); // Get all posted jobs (with total responses)
-router.get('/employer-internship/:jobId', Authenticate, getSingleInternshipWithApplicationsController); // View full job + applications(response) + profiles
 
 export default router;

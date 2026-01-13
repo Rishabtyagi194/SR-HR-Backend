@@ -23,9 +23,13 @@ class Internship {
     addResponseCode,
     AboutCompany,
     postedBy,
+    posted_by_email,
+    is_consultant_Job_Active = false,
     Status = 'draft',
-    company_id,
+    organisation_id,
+    consultant_agency_id,
     employer_id,
+    consultant_user_id,
     staff_id,
     id,
     created_at,
@@ -55,9 +59,13 @@ class Internship {
 
     // Status and relationships
     this.postedBy = postedBy;
+    this.posted_by_email = posted_by_email;
+    this.is_consultant_Job_Active = is_consultant_Job_Active;
     this.Status = Status;
-    this.company_id = company_id;
+    this.organisation_id = organisation_id;
+    this.consultant_agency_id = consultant_agency_id;
     this.employer_id = employer_id;
+    this.consultant_user_id = consultant_user_id;
     this.staff_id = staff_id;
 
     // Optional fields (for existing records)
@@ -90,9 +98,13 @@ class Internship {
       addResponseCode: this.addResponseCode,
       AboutCompany: this.AboutCompany,
       postedBy: this.postedBy,
+      posted_by_email: this.posted_by_email,
+      is_consultant_Job_Active: this.is_consultant_Job_Active,
       Status: this.Status,
-      company_id: this.company_id,
+      organisation_id: this.organisation_id,
+      consultant_agency_id: this.consultant_agency_id,
       employer_id: this.employer_id,
+      consultant_user_id: this.consultant_user_id,
       staff_id: this.staff_id,
     };
   }

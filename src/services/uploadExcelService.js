@@ -102,7 +102,7 @@ class UploadService {
     const emails = uniqueExcelRows.filter((r) => r.email).map((r) => r.email);
     const phones = uniqueExcelRows.filter((r) => r.phone).map((r) => r.phone);
 
-    const existingDuplicates = await uploadQueries.findDuplicatesByEmailOrPhone(user.company_id, emails, phones);
+    const existingDuplicates = await uploadQueries.findDuplicatesByEmailOrPhone(user.organisation_id, emails, phones);
 
     const dbDuplicateSet = new Set();
 
@@ -134,7 +134,7 @@ class UploadService {
        STEP 5 — Insert unique rows
     -----------------------------*/
     const formattedData = finalUniqueRows.map((row) => ({
-      company_id: user.company_id,
+      organisation_id: user.organisation_id,
       uploaded_by: user.id,
       uploaded_by_role: user.role,
       data_json: JSON.stringify(sanitizeRow(row)), // SAFE JSON
@@ -166,7 +166,7 @@ class UploadService {
 -----------------------------*/
   async listUploadedData(user) {
     if (user.role === 'employer_admin') {
-      return await uploadQueries.findByCompany(user.company_id);
+      return await uploadQueries.findByCompany(user.organisation_id);
     }
     return await uploadQueries.findByUploader(user.id);
   }
@@ -174,7 +174,7 @@ class UploadService {
   async updateRecordById(user, id, data) {
     const existing = await uploadQueries.getRecordById(id);
     if (!existing) throw new Error('Record not found');
-    if (existing.company_id !== user.company_id) throw new Error('Unauthorized access');
+    if (existing.organisation_id !== user.organisation_id) throw new Error('Unauthorized access');
 
     await uploadQueries.updateRecordById(id, data);
     return { id, updated: true };
@@ -183,7 +183,7 @@ class UploadService {
   async deleteRecordById(user, id) {
     const existing = await uploadQueries.getRecordById(id);
     if (!existing) throw new Error('Record not found');
-    if (existing.company_id !== user.company_id) throw new Error('Unauthorized access');
+    if (existing.organisation_id !== user.organisation_id) throw new Error('Unauthorized access');
 
     await uploadQueries.deleteRecordById(id);
     return { id, deleted: true };

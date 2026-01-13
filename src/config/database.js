@@ -127,7 +127,7 @@ export const initializeDatabase = async () => {
 
     // company table
     await connection.execute(`
-      CREATE TABLE IF NOT EXISTS companies (
+      CREATE TABLE IF NOT EXISTS organisations (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         industry VARCHAR(255),
@@ -147,54 +147,72 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    //  Employer users and its sub user
+    //  Employer/ consultant users
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS employer_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        company_id INT NOT NULL,
+        organisation_id INT NOT NULL,
         employer_id INT,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
-        role ENUM('employer_admin', 'employer_staff') DEFAULT 'employer_admin',
+        role ENUM(
+            'employer_admin',
+            'employer_staff',
+            'consultant_admin',
+            'consultant_staff'
+          ) NOT NULL,        
+        
         permissions JSON,
         is_active BOOLEAN DEFAULT FALSE,
         is_email_verified BOOLEAN DEFAULT FALSE,
+        
         email_otp VARCHAR(10),
         otp_expires_at DATETIME,
+        
         last_login TIMESTAMP NULL,
         login_history JSON,
+        
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+        
+        FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE CASCADE,
         INDEX idx_email (email),
-        INDEX idx_phone (phone)
+        INDEX idx_phone (phone),
+        INDEX idx_org_role (organisation_id, role)
+
       )
     `);
 
-    // Add foreign key for companies.admin_user_id now that employer_users exists
-    // await connection
-    //   .execute(
-    //     `
-    //   ALTER TABLE companies
-    //   ADD CONSTRAINT fk_admin_user
-    //   FOREIGN KEY (admin_user_id) REFERENCES employer_users(id) ON DELETE SET NULL
-    // `,
-    //   )
-    //   .catch((err) => {
-    //     if (err.code !== 'ER_DUP_KEYNAME' && err.code !== 'ER_CANT_CREATE_TABLE') {
-    //       throw err;
-    //     }
-    //   });
+    const [fkExists] = await connection.execute(`
+      SELECT CONSTRAINT_NAME
+      FROM information_schema.KEY_COLUMN_USAGE
+      WHERE
+        TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'organisations'
+        AND CONSTRAINT_NAME = 'fk_organisations_admin_user'
+    `);
+
+    if (fkExists.length === 0) {
+      await connection.execute(`
+        ALTER TABLE organisations
+        ADD CONSTRAINT fk_organisations_admin_user
+        FOREIGN KEY (admin_user_id)
+        REFERENCES employer_users(id)
+        ON DELETE SET NULL
+      `);
+    }
 
     // Hot Vacancy jobs Table
     await connection.execute(`
           CREATE TABLE IF NOT EXISTS HotVacancyJobs (
           job_id INT AUTO_INCREMENT PRIMARY KEY,
-          company_id INT,
+          
+          organisation_id INT,
           employer_id INT,
           staff_id INT,
+          
           category VARCHAR(255) DEFAULT 'HotVacancy',
           jobTitle VARCHAR(255),
           employmentType VARCHAR(255),
@@ -223,25 +241,44 @@ export const initializeDatabase = async () => {
           venue TEXT,
           google_maps_url VARCHAR(500),
           
-          -- Questions field (store as JSON to handle multiple questions)
-          
+          -- Questions field (store as JSON to handle multiple questions)          
           questions JSON,
           
-          postedBy VARCHAR(255),
+          posted_by_email VARCHAR(255),
+          postedBy ENUM('company', 'consultant') NOT NULL,
+          
+          is_consultant_Job_Active BOOLEAN DEFAULT FALSE,
           Status ENUM('active', 'draft', 'disable') DEFAULT 'draft',
-          FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+          FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE CASCADE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
     `);
 
+    const [rows] = await connection.execute(`
+      SELECT 1
+      FROM information_schema.STATISTICS
+      WHERE table_schema = DATABASE()
+        AND table_name = 'HotVacancyJobs'
+        AND index_name = 'idx_hotvacancy_jobs_visibility'
+    `);
+
+    if (rows.length === 0) {
+      await connection.execute(`
+        CREATE INDEX idx_hotvacancy_jobs_visibility
+        ON HotVacancyJobs (Status, postedBy, is_consultant_Job_Active);
+      `);
+    }
+
     // Internship jobs Table
     await connection.execute(`
           CREATE TABLE IF NOT EXISTS InternshipJobs (
           job_id INT AUTO_INCREMENT PRIMARY KEY,
-          company_id INT,
+          
+          organisation_id INT,
           employer_id INT,
           staff_id INT,
+          
           category VARCHAR(255) DEFAULT 'Internship',
           internshipTitle VARCHAR(255),
           employmentType VARCHAR(255),
@@ -264,13 +301,31 @@ export const initializeDatabase = async () => {
           addResponseCode VARCHAR(255),
           AboutCompany TEXT,
           
-          postedBy VARCHAR(255),
+          posted_by_email VARCHAR(255),
+          postedBy ENUM('company', 'consultant') NOT NULL,
+          
+          is_consultant_Job_Active BOOLEAN DEFAULT FALSE,
           Status ENUM('active', 'draft', 'disable') DEFAULT 'draft',
-          FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+          FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE CASCADE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
     `);
+
+    const [rowss] = await connection.execute(`
+          SELECT 1
+          FROM information_schema.STATISTICS
+          WHERE table_schema = DATABASE()
+            AND table_name = 'InternshipJobs'
+            AND index_name = 'idx_internship_jobs_visibility'
+        `);
+
+    if (rowss.length === 0) {
+      await connection.execute(`
+            CREATE INDEX idx_internship_jobs_visibility
+            ON InternshipJobs (Status, postedBy, is_consultant_Job_Active);
+          `);
+    }
 
     //  *******************  For users (client) ****************************
 
@@ -383,7 +438,7 @@ export const initializeDatabase = async () => {
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         employer_id INT,
-        company_id INT,
+        organisation_id INT,
         hotvacancy_job_id INT NULL,
         internship_job_id INT NULL,
         job_category ENUM('HotVacancy', 'Internship') DEFAULT 'HotVacancy',
@@ -394,14 +449,14 @@ export const initializeDatabase = async () => {
         FOREIGN KEY (hotvacancy_job_id) REFERENCES HotVacancyJobs(job_id) ON DELETE CASCADE,
         FOREIGN KEY (internship_job_id) REFERENCES InternshipJobs(job_id) ON DELETE CASCADE,
         FOREIGN KEY (employer_id) REFERENCES employer_users(id) ON DELETE CASCADE,
-        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+        FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE CASCADE,
 
         -- Optimized indexes for scalability
         INDEX idx_user (user_id),
-        INDEX idx_company (company_id),
+        INDEX idx_company (organisation_id),
         INDEX idx_hotvacancy_job (hotvacancy_job_id),
         INDEX idx_internship_job (internship_job_id),
-        INDEX idx_company_job (company_id, hotvacancy_job_id, internship_job_id)
+        INDEX idx_company_job (organisation_id, hotvacancy_job_id, internship_job_id)
       )
     `);
 
@@ -420,15 +475,15 @@ export const initializeDatabase = async () => {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS Excel_data_uploads (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        company_id INT NOT NULL,
+        organisation_id INT NOT NULL,
         uploaded_by INT NOT NULL,
         uploaded_by_role ENUM('employer_admin', 'employer_staff') NOT NULL,
         data_json JSON NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+        FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE CASCADE,
         FOREIGN KEY (uploaded_by) REFERENCES employer_users(id) ON DELETE CASCADE,
-        INDEX idx_company_id (company_id),
+        INDEX idx_organisation_id (organisation_id),
         INDEX idx_uploaded_by (uploaded_by)
       )
     `);
@@ -534,65 +589,96 @@ export const initializeDatabase = async () => {
 
     // *************************************** consultant ***********************************
 
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS consultant_agencies (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        industry VARCHAR(255),
-        contact_email VARCHAR(255) NOT NULL,
-        contact_phone VARCHAR(20),
-        address TEXT,
-        verified BOOLEAN DEFAULT FALSE,
-        status ENUM('active', 'suspended') DEFAULT 'active',
-        consultant_user_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_name (name),
-        INDEX idx_status (status)
-      )
-    `);
+    // await connection.execute(`
+    //   CREATE TABLE IF NOT EXISTS consultant_agencies (
+    //       id INT AUTO_INCREMENT PRIMARY KEY,
+    //       name VARCHAR(255) NOT NULL,
+    //       industry VARCHAR(255),
+    //       contact_email VARCHAR(255) NOT NULL,
+    //       contact_phone VARCHAR(20),
+    //       address TEXT,
+    //       verified BOOLEAN DEFAULT FALSE,
+    //       status ENUM('active', 'suspended') DEFAULT 'active',
+    //       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    //       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    //       INDEX idx_name (name),
+    //       INDEX idx_status (status)
+    //     );
+    // `);
+
+    // await connection.execute(`
+    //   CREATE TABLE IF NOT EXISTS consultant_users (
+    //     id INT AUTO_INCREMENT PRIMARY KEY,
+    //     organisation_id INT NOT NULL,
+    //     name VARCHAR(255) NOT NULL,
+    //     email VARCHAR(255) UNIQUE NOT NULL,
+    //     password VARCHAR(255) NOT NULL,
+    //     phone VARCHAR(20) UNIQUE,
+    //     role ENUM('consultant_admin', 'consultant_staff') DEFAULT 'consultant_admin',
+    //     is_owner BOOLEAN DEFAULT FALSE,
+    //     email_otp VARCHAR(10),
+    //     otp_expires_at DATETIME,
+    //     is_mobile_verified BOOLEAN DEFAULT FALSE,
+    //     is_email_verified BOOLEAN DEFAULT FALSE,
+    //     is_active BOOLEAN DEFAULT FALSE,
+    //     last_login TIMESTAMP NULL,
+    //     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    //     FOREIGN KEY (organisation_id) REFERENCES consultant_agencies(id) ON DELETE CASCADE,
+    //     INDEX idx_email (email),
+    //     INDEX idx_phone (phone)
+    //   );
+    // `);
 
     await connection.execute(`
-      CREATE TABLE IF NOT EXISTS consultant_users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        agency_id INT NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        phone VARCHAR(20) UNIQUE,
-        role ENUM('consultant_admin', 'consultant_staff') DEFAULT 'consultant_admin',
-        email_otp VARCHAR(10),
-        otp_expires_at DATETIME,
-        is_mobile_verified BOOLEAN DEFAULT FALSE,
-        is_email_verified BOOLEAN DEFAULT FALSE,
-        is_active BOOLEAN DEFAULT FALSE,
-        last_login TIMESTAMP NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (agency_id) REFERENCES consultant_agencies(id) ON DELETE CASCADE,
-        INDEX idx_email (email),
-        INDEX idx_phone (phone)
+      CREATE TABLE  IF NOT EXISTS consultant_job_applications (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+
+      -- SINGLE job reference (NO NULLS)
+      job_ref_id INT NOT NULL,
+      job_category ENUM('HotVacancy', 'Internship') NOT NULL,
+
+      -- Consultant
+      consultant_user_id INT NOT NULL,
+      consultant_org_id INT NOT NULL,
+
+      -- Employer
+      employer_org_id INT NOT NULL,
+      employer_user_id INT NOT NULL,
+
+      -- Multiple resumes
+      resumes JSON NOT NULL,
+
+      application_status ENUM(
+        'applied',
+        'viewed',
+        'shortlisted',
+        'rejected',
+        'hired'
+      ) DEFAULT 'applied',
+
+      posted_by_consultant VARCHAR(255) NOT NULL,
+      posted_by_consultant_email VARCHAR(255) NOT NULL,
+
+      applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+      -- Foreign keys
+      FOREIGN KEY (consultant_user_id) REFERENCES employer_users(id) ON DELETE CASCADE,
+      FOREIGN KEY (consultant_org_id) REFERENCES organisations(id) ON DELETE CASCADE,
+      FOREIGN KEY (employer_org_id) REFERENCES organisations(id) ON DELETE CASCADE,
+
+      -- ONE ROW PER CONSULTANT PER JOB
+      UNIQUE KEY uniq_consultant_job (
+        consultant_user_id,
+        job_category,
+        job_ref_id
       )
+      );
+
     `);
 
-    // ADD FK only if it doesn't exist
-      const [fkRows] = await connection.execute(`
-        SELECT CONSTRAINT_NAME
-        FROM information_schema.TABLE_CONSTRAINTS
-        WHERE
-          TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'consultant_agencies'
-          AND CONSTRAINT_NAME = 'fk_consultant_agency_owner'
-      `);
 
-      if (fkRows.length === 0) {
-        await connection.execute(`
-        ALTER TABLE consultant_agencies
-        ADD CONSTRAINT fk_consultant_agency_owner
-        FOREIGN KEY (consultant_user_id) REFERENCES consultant_users(id)
-        ON DELETE SET NULL
-      `);
-    }
     connection.release();
     console.log('All database tables initialized successfully.');
   } catch (error) {

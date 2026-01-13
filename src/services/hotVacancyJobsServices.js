@@ -11,27 +11,54 @@ class JobsService {
 
     const job = await JobPostQueries.create(jobsData);
 
-    await invalidateJobCache(jobsData.company_id); // invalidate all list caches
+    await invalidateJobCache(jobsData.organisation_id); // invalidate all list caches
     return job;
   }
 
-  // Paginated list of all jobs (with Redis cache)
-  async listAllJobs(page = 1, limit = 10, companyId = null) {
-    const cacheKey = companyId ? `hotvacancy:list:${companyId}:${page}:${limit}` : `hotvacancy:list:all:${page}:${limit}`;
+  async listDashboardJobs(page, limit, role, organisationId, userId) {
+    const cacheKey = role.endsWith('_staff')
+      ? `dashboard:jobs:${role}:${userId}:${page}:${limit}`
+      : `dashboard:jobs:${role}:${organisationId}:${page}:${limit}`;
 
     const cached = await redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
 
-    if (cached) {
-      console.log(`Redis cache hit → ${cacheKey}`);
-      return JSON.parse(cached);
-    }
+    const data = await JobPostQueries.getDashboardJobs(page, limit, role, organisationId, userId);
 
-    console.log(` Cache miss → fetching from DB...`);
-    const data = await JobPostQueries.getAllJobs(page, limit, companyId);
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 180);
+    return data;
+  }
 
-    // Store in Redis 
-    await redis.set(cacheKey, JSON.stringify(data), 'EX', 180); // 5 min
+  // Paginated list of all jobs (with Redis cache)
+  // async listAllJobs(page = 1, limit = 10, organisationId = null, role) {
+  //   const cacheKey = organisationId
+  //     ? `hotvacancy:list:${role}:${organisationId}:${page}:${limit}`
+  //     : `hotvacancy:list:${role}:all:${page}:${limit}`;
 
+  //   const cached = await redis.get(cacheKey);
+
+  //   if (cached) {
+  //     console.log(`Redis cache hit → ${cacheKey}`);
+  //     return JSON.parse(cached);
+  //   }
+
+  //   console.log(` Cache miss → fetching from DB...`);
+  //   const data = await JobPostQueries.getAllJobs(page, limit, organisationId, role);
+
+  //   // Store in Redis
+  //   await redis.set(cacheKey, JSON.stringify(data), 'EX', 180); // 5 min
+
+  //   return data;
+  // }
+  async listPublicJobs(page, limit, role) {
+    const cacheKey = `public:jobs:${role}:${page}:${limit}`;
+
+    const cached = await redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    const data = await JobPostQueries.getPublicJobs(page, limit, role);
+
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 180);
     return data;
   }
 
@@ -48,14 +75,14 @@ class JobsService {
     const job = await JobPostQueries.getJobById(jobId);
     if (!job) return null;
 
-    await redis.set(cacheKey, JSON.stringify(job), 'EX', 300); // 5 min TTL
+    await redis.set(cacheKey, JSON.stringify(job), 'EX', 180); // 5 min TTL
     return job;
   }
 
   //  Update a job and invalidate caches
   async updateJob(id, updateData) {
     const job = await JobPostQueries.updateJobById(id, updateData);
-    if (job) await invalidateJobCache(job.company_id, id);
+    if (job) await invalidateJobCache(job.organisation_id, id);
     return job;
   }
 
@@ -63,7 +90,7 @@ class JobsService {
   async deleteJob(id) {
     const job = await JobPostQueries.getJobById(id);
     const deleted = await JobPostQueries.deleteJobById(id);
-    if (deleted && job) await invalidateJobCache(job.company_id, id);
+    if (deleted && job) await invalidateJobCache(job.organisation_id, id);
     return deleted;
   }
 }

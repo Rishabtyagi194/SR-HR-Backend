@@ -1,8 +1,9 @@
 import UserService from '../services/userService.js';
 import { validationResult } from 'express-validator';
-import { deleteFromCloudinary, uploadOnCloudinary } from '../utils/cloudinary.js';
 import { getReadPool } from '../config/database.js';
 import { saveSearchKeyword } from '../services/searchKeywordService.js';
+import { uploadUserResume } from '../utils/cloudinary/userResumeUploader.js';
+import { deleteFromCloudinary } from '../utils/cloudinary/baseUploader.js';
 
 // =================== AUTH ===================
 
@@ -77,6 +78,51 @@ export const updateProfile = async (req, res) => {
 
 // =================== RESUME ===================
 
+// export const uploadResume = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const localFilePath = req.file?.path;
+
+//     if (!localFilePath) {
+//       return res.status(400).json({ message: 'No file uploaded' });
+//     }
+
+//     //  Check if old resume exists in DB
+//     const [user] = await getReadPool().execute(`SELECT resume_public_id FROM user_profiles WHERE user_id = ?`, [userId]);
+
+//     const oldPublicId = user?.[0]?.resume_public_id;
+
+  
+//     //  Upload new resume to Cloudinary
+//     const uploadResult = await uploadUserResume(localFilePath, req.user.id);
+
+//     if (!uploadResult) {
+//       return res.status(500).json({ message: 'Failed to upload to Cloudinary' });
+//     }
+//     // console.log('uploadResult:', JSON.stringify(uploadResult, null, 2));
+
+//     const resumeUrl = uploadResult.secure_url;
+//     const resumePublicId = uploadResult.public_id;
+
+//     //  Update DB
+//     const result = await UserService.uploadResume(userId, resumeUrl, resumePublicId);
+
+
+//       //  Delete old resume from Cloudinary if exists
+//     if (oldPublicId) {
+//       await deleteFromCloudinary(oldPublicId);
+//     }
+
+//     res.status(200).json({
+//       message: 'Resume updated successfully',
+//       data: result,
+//     });
+//   } catch (err) {
+//     console.error('Error in uploadResume:', err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 export const uploadResume = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -86,39 +132,40 @@ export const uploadResume = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    //  Check if old resume exists in DB
-    const [user] = await getReadPool().execute(`SELECT resume_public_id FROM user_profiles WHERE user_id = ?`, [userId]);
+    // Fetch old resume public_id (if any)
+    const [[profile]] = await getReadPool().execute(
+      `SELECT resume_public_id FROM user_profiles WHERE user_id = ?`,
+      [userId]
+    );
 
-    const oldPublicId = user?.[0]?.resume_public_id;
+    const oldPublicId = profile?.resume_public_id || null;
 
-    //  Delete old resume from Cloudinary if exists
-    if (oldPublicId) {
-      await deleteFromCloudinary(oldPublicId);
-    }
-
-    //  Upload new resume to Cloudinary
-    const uploadResult = await uploadOnCloudinary(localFilePath);
-    if (!uploadResult) {
-      return res.status(500).json({ message: 'Failed to upload to Cloudinary' });
-    }
-    // console.log('uploadResult:', JSON.stringify(uploadResult, null, 2));
+    // Upload NEW resume first
+    const uploadResult = await uploadUserResume(localFilePath, userId);
 
     const resumeUrl = uploadResult.secure_url;
     const resumePublicId = uploadResult.public_id;
 
-    //  Update DB
-    const result = await UserService.uploadResume(userId, resumeUrl, resumePublicId);
+    // Update DB
+    await UserService.uploadResume(userId, resumeUrl, resumePublicId);
 
-    res.status(200).json({
+    // Delete old resume AFTER success
+    if (oldPublicId) {
+      await deleteFromCloudinary(oldPublicId);
+    }
+
+    return res.status(200).json({
       message: 'Resume updated successfully',
-      data: result,
+      data: {
+        user_id: userId,
+        resume_url: resumeUrl,
+      },
     });
-  } catch (err) {
-    console.error('Error in uploadResume:', err);
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    console.error('Error in uploadResume:', error);
+    return res.status(500).json({ message: error.message });
   }
-};
-
+}; 
 // =================== EDUCATION ===================
 export const addEducation = async (req, res) => {
   try {
