@@ -185,7 +185,6 @@ export const ListAllJobsController = async (req, res) => {
   }
 };
 
-
 // When employer clicks a specific job → show full responses + user profiles
 export const getSingleJobWithApplicationsController = async (req, res) => {
   try {

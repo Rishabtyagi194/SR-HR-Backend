@@ -35,4 +35,10 @@ router.patch('/user/:id', Authenticate, authorizeRoles('super_admin', 'employer_
 // Delete employer/staff
 router.delete('/user/:id', Authenticate, authorizeRoles('super_admin', 'employer_admin'), deleteUser);
 
+
+// ----------------------------------- consultant ------------------------------------
+
+// router.patch('/consultant-resume/status', Authenticate, authorizeRoles('super_admin', 'employer_admin'), updateUser);
+
+
 export default router;
