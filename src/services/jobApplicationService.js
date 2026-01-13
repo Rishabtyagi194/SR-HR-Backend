@@ -1,5 +1,6 @@
 import { getReadPool, getWritePool } from '../config/database.js';
 import { jobApplicationQueries } from '../queries/jobApplicationQueries.js';
+import { randomUUID } from 'crypto';
 
 // Apply on a particular job
 const applyForJob = async (jobId, user_id, answers = [], category) => {
@@ -149,6 +150,59 @@ const getUserAllAppliedJobs = async (userId) => {
 
 //  ------------------------ Submit Resume by consultant on a job ---------------------------
 
+// export const uploadResume = async ({ user, resumeUrl, resumePublicId, jobId, category }) => {
+//   const { id: consultantUserId, organisation_id, email } = user;
+
+//   const [[consultantOrg]] = await getReadPool().execute(`SELECT name FROM organisations WHERE id = ?`, [organisation_id]);
+//   if (!consultantOrg) throw new Error('Consultant organisation not found');
+
+//   const jobTable = category === 'HotVacancy' ? 'HotVacancyJobs' : 'InternshipJobs';
+//   const [[job]] = await getReadPool().execute(`SELECT organisation_id, employer_id FROM ${jobTable} WHERE job_id = ?`, [jobId]);
+//   if (!job) throw new Error('Job not found');
+
+//   const resumeObj = {
+//     resume_id: randomUUID(),
+//     url: resumeUrl,
+//     public_id: resumePublicId,
+//     uploaded_at: new Date().toISOString(),
+//     status: 'applied',
+//   };
+
+//   await getWritePool().execute(
+//     `
+//     INSERT INTO consultant_job_applications (
+//       job_ref_id,
+//       job_category,
+//       consultant_user_id,
+//       consultant_org_id,
+//       employer_org_id,
+//       employer_user_id,
+//       resumes,
+//       posted_by_consultant,
+//       posted_by_consultant_email
+//     )
+//     VALUES (?, ?, ?, ?, ?, ?, JSON_ARRAY(?), ?, ?)
+//     ON DUPLICATE KEY UPDATE
+//       resumes = JSON_ARRAY_APPEND(resumes, '$', ?),
+//       updated_at = NOW()
+//     `,
+//     [
+//       jobId,
+//       category,
+//       consultantUserId,
+//       organisation_id,
+//       job.organisation_id,
+//       job.employer_id,
+//       JSON.stringify(resumeObj),
+//       consultantOrg.name,
+//       email,
+//       JSON.stringify(resumeObj),
+//     ],
+//   );
+
+//   return resumeObj;
+// };
+
 export const uploadResume = async ({
   user,
   resumeUrl,
@@ -158,12 +212,14 @@ export const uploadResume = async ({
 }) => {
   const { id: consultantUserId, organisation_id, email } = user;
 
+  // Consultant org
   const [[consultantOrg]] = await getReadPool().execute(
     `SELECT name FROM organisations WHERE id = ?`,
     [organisation_id]
   );
   if (!consultantOrg) throw new Error('Consultant organisation not found');
 
+  // Job owner
   const jobTable = category === 'HotVacancy' ? 'HotVacancyJobs' : 'InternshipJobs';
   const [[job]] = await getReadPool().execute(
     `SELECT organisation_id, employer_id FROM ${jobTable} WHERE job_id = ?`,
@@ -171,10 +227,13 @@ export const uploadResume = async ({
   );
   if (!job) throw new Error('Job not found');
 
+  // ✅ Resume object with INDIVIDUAL STATUS
   const resumeObj = {
+    resume_id: randomUUID(),
     url: resumeUrl,
     public_id: resumePublicId,
     uploaded_at: new Date().toISOString(),
+    status: 'applied',
   };
 
   await getWritePool().execute(
@@ -211,7 +270,6 @@ export const uploadResume = async ({
 
   return resumeObj;
 };
-
 export default {
   applyForJob,
   getApplicationsForJob,

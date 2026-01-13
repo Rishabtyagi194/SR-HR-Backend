@@ -265,7 +265,7 @@ export const initializeDatabase = async () => {
 
     if (rows.length === 0) {
       await connection.execute(`
-        CREATE INDEX idx_hotvacancy_jobs_visibility
+        CREATE INDEX  IF NOT EXISTS idx_hotvacancy_jobs_visibility
         ON HotVacancyJobs (Status, postedBy, is_consultant_Job_Active);
       `);
     }
@@ -648,14 +648,6 @@ export const initializeDatabase = async () => {
 
       -- Multiple resumes
       resumes JSON NOT NULL,
-
-      application_status ENUM(
-        'applied',
-        'viewed',
-        'shortlisted',
-        'rejected',
-        'hired'
-      ) DEFAULT 'applied',
 
       posted_by_consultant VARCHAR(255) NOT NULL,
       posted_by_consultant_email VARCHAR(255) NOT NULL,

@@ -36,7 +36,7 @@ router.get('/company/all', Authenticate, authorizeRoles('employer_admin', 'emplo
 // Consultant upload resume on a particular job 
 router.post('/:category/:jobId/consultant/submit-resume', Authenticate, 
   authorizeRoles('consultant_admin', 'consultant_staff'),
-  upload.array('resumes', 5),
+  upload.array('resumes', 10),
   uploadResumeOnJobController);
 
 // Employer views all jobs on which consultant uploaded resume 
