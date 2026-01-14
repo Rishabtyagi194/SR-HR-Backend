@@ -265,7 +265,7 @@ export const initializeDatabase = async () => {
 
     if (rows.length === 0) {
       await connection.execute(`
-        CREATE INDEX  IF NOT EXISTS idx_hotvacancy_jobs_visibility
+        CREATE INDEX idx_hotvacancy_jobs_visibility
         ON HotVacancyJobs (Status, postedBy, is_consultant_Job_Active);
       `);
     }
