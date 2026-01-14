@@ -73,6 +73,14 @@ export const initializeDatabase = async () => {
     const pool = getWritePool();
     const connection = await pool.getConnection();
 
+     // 🔎 Log MySQL version ONCE
+    if (!global.__mysqlVersionLogged) {
+      const [[version]] = await connection.execute(
+        'SELECT VERSION() AS v'
+      );
+      console.log('MySQL Version:', version.v);
+      global.__mysqlVersionLogged = true;
+    }
     console.log(' Creating database tables...');
 
     // Subscription categories
@@ -108,7 +116,7 @@ export const initializeDatabase = async () => {
     //   )
     // `);
 
-    //  Admins users
+    // ---------------------------- Admins users ----------------------------------
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS admins (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -125,7 +133,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // company table
+    // --------------------------- Organisation ------------------------------
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS organisations (
         id INT AUTO_INCREMENT PRIMARY KEY,
