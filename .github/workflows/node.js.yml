@@ -1,3 +1,7 @@
+# # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
@@ -38,10 +42,55 @@ jobs:
       - name: Deploy qa branch to Staging
         if: github.ref == 'refs/heads/qa'
         run: |
-          ssh -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227 "
-            cd /var/www/qa/SR-HR-Backend &&
-            git fetch origin qa &&
-            git reset --hard origin/qa &&
-            npm install &&
-            pm2 restart qa-app || pm2 start src/index.js --name qa-app
-          "
+          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227 << 'EOF'
+          cd /var/www/qa/SR-HR-Backend
+          git fetch origin qa
+          git reset --hard origin/qa
+          npm install
+          pm2 restart qa-app || pm2 start src/index.js --name qa-app
+          EOF
+
+# name: Deploy to VPS
+
+# on:
+#   push:
+#     branches:
+#       - main
+#       - qa
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Setup SSH
+#         uses: webfactory/ssh-agent@v0.7.0
+#         with:
+#           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+#       # Deploy Production (main branch)
+#       - name: Deploy main branch to Production
+#         if: github.ref == 'refs/heads/main'
+#         run: |
+#           ssh -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227 "
+#             cd /var/www/prod/SR-HR-Backend &&
+#             git fetch origin main &&
+#             git reset --hard origin/main &&
+#             npm install &&
+#             pm2 restart prod-app || pm2 start src/index.js --name prod-app
+#           "
+
+#       # Deploy Staging (qa branch)
+#       - name: Deploy qa branch to Staging
+#         if: github.ref == 'refs/heads/qa'
+#         run: |
+#           ssh -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227 "
+#             cd /var/www/qa/SR-HR-Backend &&
+#             git fetch origin qa &&
+#             git reset --hard origin/qa &&
+#             npm install &&
+#             pm2 restart qa-app || pm2 start src/index.js --name qa-app
+#           "
