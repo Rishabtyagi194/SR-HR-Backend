@@ -5,7 +5,7 @@ import morgan from 'morgan';
 // Import routes
 import adminRoutes from './routes/superAdminRoutes.js';
 // import authRoutes from './routes/authRoutes.js';
-import orgRoutes from './routes/organizationRoutes.js'
+import organizationRoutes from './routes/organizationRoutes.js'
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
 import hotVacancyJobsRoutes from './routes/hotVacancyJobsRoutes.js';
@@ -41,7 +41,7 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
-app.use('/api/organization', orgRoutes);
+app.use('/api/organization', organizationRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/jobs/applications', jobApplication);
 app.use('/api/jobs', hotVacancyJobsRoutes);
