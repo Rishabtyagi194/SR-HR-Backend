@@ -290,7 +290,7 @@ class jobQueries {
     FROM HotVacancyJobs
     WHERE ${where}
     ORDER BY created_at DESC
-    LIMIT ? OFFSET ?
+    LIMIT ? OFFSET ? 
     `,
       [...params, limit, offset],
     );
@@ -396,6 +396,11 @@ class jobQueries {
     job.total_consultant_applications = parsedConsultantApplications.length;
     job.total_applications = applications.length + parsedConsultantApplications.length;
 
+    // Shortlisted counts
+    job.shortlisted_user_applications = applications.filter((app) => app.application_status === 'shortlisted').length;
+    job.shortlisted_consultant_applications = parsedConsultantApplications.filter((app) => app.application_status === 'shortlisted').length;
+    job.total_shortlisted_applications = job.shortlisted_user_applications + job.shortlisted_consultant_applications;
+    
     return job;
   }
 

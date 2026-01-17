@@ -7,7 +7,6 @@ export const getApplicationsByEmployerOrg = (limit, offset) => `
     cja.consultant_org_id,
     cja.employer_org_id,
     cja.resumes,
-    cja.application_status,
     cja.posted_by_consultant,
     cja.posted_by_consultant_email,
     cja.applied_at

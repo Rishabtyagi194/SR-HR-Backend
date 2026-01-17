@@ -27,7 +27,6 @@ router.get('/all-jobs', Authenticate, authorizeRoles('job_seeker', 'consultant_a
 // View single job detail
 router.get('/get-job/:id', getJobsByIdController); 
 
-
 router.patch('/update/:id', Authenticate, updateJobsController);
 
 router.delete('/delete/:id', Authenticate, deleteJobsController);
