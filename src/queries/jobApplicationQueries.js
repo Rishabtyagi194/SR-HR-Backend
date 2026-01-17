@@ -133,7 +133,7 @@ export const jobApplicationQueries = {
     WHERE application_id = ?
   `,
 
-  // get all applied application for users
+// get all applied application for users
   getUserAllAppliedJobs: `
   SELECT 
     ja.id AS application_id,
@@ -219,7 +219,7 @@ export const jobApplicationQueries = {
   WHERE job_id = ?
 `,
 
-  //  Fetch user's education, experience, and skills
+//  Fetch user's education, experience, and skills
   getUserEducations: `
     SELECT degree, specialization, institute_name, start_year, end_year, percentage
     FROM user_education WHERE user_id = ?
@@ -235,8 +235,7 @@ export const jobApplicationQueries = {
     FROM user_skills WHERE user_id = ?
   `,
 
-
-  // ------------------------------ consultant ------------------------------------
+// ------------------------------ consultant ------------------------------------
 
   getConsultantApplicationsByHotVacancyJobId: `
   SELECT
@@ -246,7 +245,6 @@ export const jobApplicationQueries = {
     cja.consultant_user_id,
     cja.consultant_org_id,
     cja.employer_org_id,
-    cja.application_status,
     cja.posted_by_consultant,
     cja.posted_by_consultant_email,
     cja.resumes,
@@ -267,7 +265,6 @@ export const jobApplicationQueries = {
     cja.consultant_user_id,
     cja.consultant_org_id,
     cja.employer_org_id,
-    cja.application_status,
     cja.posted_by_consultant,
     cja.posted_by_consultant_email,
     cja.resumes,
@@ -288,7 +285,6 @@ getConsultantUploadedJobs: `
     cja.employer_org_id,
     cja.consultant_user_id,
     cja.job_category,
-    cja.application_status,
     cja.applied_at,
     cja.updated_at,
 
@@ -321,7 +317,6 @@ getConsultantUploadedJobs: `
   WHERE cja.consultant_user_id = ?
   ORDER BY cja.applied_at DESC
 `, 
-
 
 getHotVacancyJobByJobIdAndOrgId: `
     SELECT
@@ -365,8 +360,8 @@ getHotVacancyJobByJobIdAndOrgId: `
     WHERE job_id = ?
       AND organisation_id = ?
     LIMIT 1
-  `
-  
+  ` 
+
 };
 
 // export const jobApplicationQueries = {

@@ -47,12 +47,10 @@ router.get('/consultant/uploaded-resume/on-jobs',Authenticate,
   getMyUploadedJobsController
 );
 
-
 router.get('/consultant/:employer_org_id/:job_ref_id',Authenticate,
   authorizeRoles('consultant_admin', 'consultant_staff'),
   getJobByJobIdAndOrgIdController
 );
-
 
 
 export default router;
