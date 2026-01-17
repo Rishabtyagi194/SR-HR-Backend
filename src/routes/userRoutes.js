@@ -33,8 +33,12 @@ router.get('/profile/:id', Authenticate, authorizeRoles('employer_admin', 'emplo
 // Update profile
 router.patch('/profile/update', Authenticate, userController.updateProfile);
 
-// Upload resume
+/* ----------------------------- Resume  ---------------------------- */
+
+// update resume
 router.patch('/upload-resume', Authenticate, upload.single('resume'), userController.uploadResume);
+
+router.get('/resume/get', Authenticate, userController.getResume);
 
 /* ----------------------------- EDUCATIONS  ---------------------------- */
 

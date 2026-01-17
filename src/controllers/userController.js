@@ -166,6 +166,28 @@ export const uploadResume = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 }; 
+
+export const getResume = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch old resume 
+    const [[resume]] = await getReadPool().execute(
+      `SELECT resume_url FROM user_profiles WHERE user_id = ?`,
+      [userId]
+    );
+
+    return res.status(200).json({
+      message: 'Resume updated successfully',
+      resume
+    });
+  } catch (error) {
+    console.error('Error in uploadResume:', error);
+    return res.status(500).json({ message: error.message });
+  }
+}; 
+
+
 // =================== EDUCATION ===================
 export const addEducation = async (req, res) => {
   try {
