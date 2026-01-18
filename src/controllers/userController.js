@@ -12,17 +12,25 @@ export const register = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({
+        success: false,
+        errors: errors.array(),
+      });
     }
 
     const result = await UserService.register(req.body);
-    res.status(201).json({
+
+    return res.status(201).json({
       success: true,
       data: result,
     });
   } catch (err) {
-    console.error('Register Error:', err);
-    res.status(500).json({ success: false, message: err.message });
+    console.error('Register Error:', err.message);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Registration failed',
+    });
   }
 };
 
@@ -61,6 +69,21 @@ export const getProfileById = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const updateBasicDetails = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updatedProfile = await UserService.updateBasicProfile(userId, req.body);
+
+    if (req.body.profile_title) {
+      await saveSearchKeyword(userId, req.body.profile_title);
+    }
+    res.json({ message: 'Basic Profile updated successfully', data: updatedProfile });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 export const updateProfile = async (req, res) => {
   try {
@@ -178,7 +201,7 @@ export const getResume = async (req, res) => {
     );
 
     return res.status(200).json({
-      message: 'Resume updated successfully',
+      message: 'Resume get successfully',
       resume
     });
   } catch (error) {
