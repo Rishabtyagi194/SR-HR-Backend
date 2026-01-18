@@ -10,42 +10,134 @@ const JWT_SECRET = process.env.JWT_SECRET || 'abfa477a5f71155408d7e69fcc35abc378
 class UserService {
   //  ---------------------------- Signup ---------------------------
 
-  async register({ full_name, email, password, phone }) {
-    const existing = await UserQueries.findByEmail(email);
-    if (existing) throw new Error('Email already registered');
+  // async register({ full_name, password, role, Work_status, current_location_country, current_location, phone, availability_to_join, email }) {
+  //   const existing = await UserQueries.findByEmail(email);
+  //   if (existing) throw new Error('Email already registered');
 
-    const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+  //   const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+  //   const otp = generateOTP();
+  //   const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min validity
+
+  //   const conn = await getWritePool().getConnection();
+  //   try {
+  //     await conn.beginTransaction();
+
+  //     // Insert user record
+  //     const [ins] = await conn.execute(
+  //       `INSERT INTO users (full_name, email, password, phone, email_otp, otp_expires_at, created_at)
+  //        VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+  //       [full_name, email, hashed, phone || null, otp, otpExpiresAt],
+  //     );
+  //     const userId = ins.insertId;
+
+  //     // Initialize empty profile
+  //     await conn.execute(
+  //       `INSERT INTO user_profiles (user_id, created_at, updated_at)
+  //        VALUES (?, NOW(), NOW())`,
+  //       [userId],
+  //     );
+
+  //     await conn.commit();
+
+  //     // Send OTP email
+  //     await sendVerificationOTP(email, otp);
+
+  //     return {
+  //       user_id: userId,
+  //       email,
+  //       message: 'Verififcation OTP sent to email. Please verify your email.',
+  //     };
+  //   } catch (err) {
+  //     await conn.rollback();
+  //     throw err;
+  //   } finally {
+  //     conn.release();
+  //   }
+  // }
+
+  async register({
+    full_name,
+    email,
+    password,
+    phone,
+    
+    role = 'job_seeker',
+    
+    work_status,
+    current_location_country,
+    current_location,
+    
+    availability_to_join,
+
+  }) {
+    const existing = await UserQueries.findByEmail(email);
+    if (existing) {
+      throw new Error('Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const otp = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min validity
+    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     const conn = await getWritePool().getConnection();
+
     try {
       await conn.beginTransaction();
 
-      // Insert user record
-      const [ins] = await conn.execute(
-        `INSERT INTO users (full_name, email, password, phone, email_otp, otp_expires_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-        [full_name, email, hashed, phone || null, otp, otpExpiresAt],
+      // Insert user
+      const [result] = await conn.execute(
+        `
+      INSERT INTO users (
+        full_name,
+        email,
+        password,
+        role,
+        work_status,
+        current_location_country,
+        current_location,
+        phone,
+        availability_to_join,
+        email_otp,
+        otp_expires_at,
+        is_active,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, NOW())
+      `,
+        [
+          full_name,
+          email,
+          hashedPassword,
+          role,
+          work_status || null,
+          current_location_country || null,
+          current_location || null,
+          phone || null,
+          availability_to_join || null,
+          otp,
+          otpExpiresAt,
+        ],
       );
-      const userId = ins.insertId;
 
-      // Initialize empty profile
+      const userId = result.insertId;
+
+      // Create empty profile
       await conn.execute(
-        `INSERT INTO user_profiles (user_id, created_at, updated_at)
-         VALUES (?, NOW(), NOW())`,
+        `
+      INSERT INTO user_profiles (user_id, created_at, updated_at)
+      VALUES (?, NOW(), NOW())
+      `,
         [userId],
       );
 
       await conn.commit();
 
-      // Send OTP email
+      // Send OTP email AFTER commit
       await sendVerificationOTP(email, otp);
 
       return {
         user_id: userId,
         email,
-        message: 'Verififcation OTP sent to email. Please verify your email.',
+        message: 'Verification OTP sent to email. Please verify your email.',
       };
     } catch (err) {
       await conn.rollback();
@@ -108,6 +200,15 @@ class UserService {
         skills,
       },
     };
+  }
+
+  async updateBasicProfile(userId, profile) {
+    const [rows] = await getReadPool().execute(`SELECT id FROM users WHERE id = ?`, [userId]);
+
+    const updatedUser = await UserQueries.updateBasicProfile(userId, profile);
+
+    // const updatedUser = await this.getProfile(userId);
+    return updatedUser;
   }
 
   async updateProfile(userId, profile) {
