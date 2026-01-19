@@ -12,11 +12,12 @@ const router = express.Router();
 router.post(
   '/register',
   [
-    body('full_name').notEmpty().withMessage('Full name required'),
-    body('email').isEmail().withMessage('Valid email required'),
+    body('full_name').trim().notEmpty().withMessage('Full name required'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('phone').optional().isMobilePhone().withMessage('Invalid phone number'),
   ],
-  userController.register,
+  userController.register
 );
 
 // Login
@@ -30,8 +31,12 @@ router.get('/profile', Authenticate, userController.getProfile);
 // Get profile of user by employer - search by resdex
 router.get('/profile/:id', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), userController.getProfileById);
 
-// Update profile
+// Update Basic profile
+router.patch('/profile/update/basic', Authenticate, userController.updateBasicDetails);
+
+// Update Basic profile
 router.patch('/profile/update', Authenticate, userController.updateProfile);
+
 
 /* ----------------------------- Resume  ---------------------------- */
 

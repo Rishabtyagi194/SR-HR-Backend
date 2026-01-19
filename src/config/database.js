@@ -341,67 +341,154 @@ export const initializeDatabase = async () => {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
+
         full_name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
+
         role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
+
+        work_status ENUM('fresher', 'experienced'),
+        total_experience_years INT DEFAULT 0,
+        total_experience_months INT DEFAULT 0,
+
+        current_salary_currency CHAR(3) DEFAULT 'INR',
+        current_salary VARCHAR(255),
+        salary_breakdown VARCHAR(255),
+
+        current_location_country ENUM('india', 'outside_india'),
+        current_location VARCHAR(255),
+        
+        availability_to_join VARCHAR(255),
+        Expected_last_working_day DATE,
+        
         email_otp VARCHAR(10),
+        otp_expires_at DATETIME,
+
         is_mobile_verified BOOLEAN DEFAULT FALSE,
         is_email_verified BOOLEAN DEFAULT FALSE,
-        otp_expires_at DATETIME,
         is_active BOOLEAN DEFAULT FALSE,
+
         last_login TIMESTAMP NULL,
+        
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
         INDEX idx_email (email),
         INDEX idx_phone (phone)
       )
     `);
+
+    //  await connection.execute(`
+    //   CREATE TABLE IF NOT EXISTS users (
+    //     id INT AUTO_INCREMENT PRIMARY KEY,
+    //     full_name VARCHAR(255) NOT NULL,
+    //     email VARCHAR(255) UNIQUE NOT NULL,
+    //     password VARCHAR(255) NOT NULL,
+    //     phone VARCHAR(20) UNIQUE,
+    //     role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
+    //     email_otp VARCHAR(10),
+    //     is_mobile_verified BOOLEAN DEFAULT FALSE,
+    //     is_email_verified BOOLEAN DEFAULT FALSE,
+    //     otp_expires_at DATETIME,
+    //     is_active BOOLEAN DEFAULT FALSE,
+    //     last_login TIMESTAMP NULL,
+    //     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    //     INDEX idx_email (email),
+    //     INDEX idx_phone (phone)
+    //   )
+    // `);
 
     // user profile
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_profiles (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        dob DATE DEFAULT NULL,
+        
         gender ENUM('male', 'female', 'other') DEFAULT NULL,
-        address VARCHAR(255) DEFAULT NULL,
-        city VARCHAR(255) DEFAULT NULL,
-        state VARCHAR(255) DEFAULT NULL,
-        country VARCHAR(255) DEFAULT NULL,
+        marital_status VARCHAR(255),
+        dob DATE DEFAULT NULL,
+        category VARCHAR(255),
+        work_permit_for_usa VARCHAR(255),
+        Work_permit_for_other_countries VARCHAR(255),
+
+        permanent_address VARCHAR(255) DEFAULT NULL,
+        hometown VARCHAR(255) DEFAULT NULL,
         pincode VARCHAR(20) DEFAULT NULL,
-        profile_completion INT DEFAULT 0,
+        
         profile_title VARCHAR(255),
-        about_me TEXT,
-        is_pwd BOOLEAN DEFAULT FALSE,
-        current_location VARCHAR(255),
+        resume_headline VARCHAR(255),
+        profile_summary TEXT,
+        
+        profile_completion INT DEFAULT 0,
+        disability_status VARCHAR(255) DEFAULT NULL,
+        
+        key_skills JSON,
+        
         preferred_location VARCHAR(255),
         willingToRelocate BOOLEAN DEFAULT FALSE,
-        total_experience_years INT DEFAULT 0,
-        total_experience_months INT DEFAULT 0,
+        
         notice_period VARCHAR(50),
-        current_salary VARCHAR(50),
         expected_salary VARCHAR(50),
+
         resume_url VARCHAR(500),
         resume_public_id VARCHAR(255),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+       
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    //  await connection.execute(`
+    //   CREATE TABLE IF NOT EXISTS user_profiles (
+    //     id INT AUTO_INCREMENT PRIMARY KEY,
+    //     user_id INT NOT NULL,
+    //     dob DATE DEFAULT NULL,
+    //     gender ENUM('male', 'female', 'other') DEFAULT NULL,
+    //     address VARCHAR(255) DEFAULT NULL,
+    //     city VARCHAR(255) DEFAULT NULL,
+    //     state VARCHAR(255) DEFAULT NULL,
+    //     country VARCHAR(255) DEFAULT NULL,
+    //     pincode VARCHAR(20) DEFAULT NULL,
+    //     profile_completion INT DEFAULT 0,
+    //     profile_title VARCHAR(255),
+    //     about_me TEXT,
+    //     is_pwd BOOLEAN DEFAULT FALSE,
+    //     current_location VARCHAR(255),
+    //     preferred_location VARCHAR(255),
+    //     willingToRelocate BOOLEAN DEFAULT FALSE,
+    //     total_experience_years INT DEFAULT 0,
+    //     total_experience_months INT DEFAULT 0,
+    //     notice_period VARCHAR(50),
+    //     current_salary VARCHAR(50),
+    //     expected_salary VARCHAR(50),
+    //     resume_url VARCHAR(500),
+    //     resume_public_id VARCHAR(255),
+    //     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    //     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    //   )
+    // `);
 
     // users educations
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_education (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
+        
         degree VARCHAR(255),
-        specialization VARCHAR(255),
         institute_name VARCHAR(255),
+        specialization VARCHAR(255),
+        course_type VARCHAR(255),
+        
         start_year YEAR,
         end_year YEAR,
         percentage DECIMAL(5,2),
+        
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id)
       )
@@ -412,16 +499,36 @@ export const initializeDatabase = async () => {
       CREATE TABLE IF NOT EXISTS user_experience (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        department VARCHAR(255),
-        industry VARCHAR(255),
+        
+        is_current_employment BOOLEAN DEFAULT FALSE,
+        employment_type VARCHAR(255),
+        total_exp_year INT DEFAULT 0,
+        total_exp_months INT DEFAULT 0,
+        
         company_name VARCHAR(255),
         job_title VARCHAR(255),
-        job_type VARCHAR(255),
-        employment_type VARCHAR(255),
+        joining_date_year VARCHAR(255),
+        joining_date_months VARCHAR(255),
+        
+        salary_currency CHAR(3) DEFAULT 'INR',
+        current_salary VARCHAR(255),
+        
+        skills_used VARCHAR(255),
+
+        department VARCHAR(255),
+        industry VARCHAR(255),
+        
+        job_profile TEXT,
+        
+        notice_period VARCHAR(255),
+        Expected_last_working_day DATE,
+        
         start_date DATE,
-        end_date DATE,
-        currently_working BOOLEAN DEFAULT FALSE,
-        description TEXT,
+        end_date DATE,   
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id)
       )
@@ -432,14 +539,86 @@ export const initializeDatabase = async () => {
       CREATE TABLE IF NOT EXISTS user_skills (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
+        
         skill_name VARCHAR(255) NOT NULL,
         proficiency_level ENUM('beginner', 'intermediate', 'advanced', 'expert'),
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id),
         INDEX idx_skill (skill_name)
       )
     `);
 
+    // users projects
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_projects (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        
+        project_title VARCHAR(255),
+        client VARCHAR(255),
+        project_status VARCHAR(255),
+        
+        work_from_year VARCHAR(255),
+        work_from_month VARCHAR(255),
+        work_to_year VARCHAR(255),
+        work_to_month VARCHAR(255),
+        
+        project_details TEXT,
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+         
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id)
+      )
+    `);
+    
+    // users Accomplishments
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_accomplishments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+
+        -- Social / Online profile
+        social_profile VARCHAR(255),
+        social_profile_url VARCHAR(255),
+        social_profile_description VARCHAR(255),
+
+        -- Work sample
+        work_sample_title VARCHAR(255),
+        work_sample_url VARCHAR(255),
+        work_sample_description TEXT,
+        
+        work_sample_from_year VARCHAR(255),
+        work_sample_from_month VARCHAR(255),
+        work_sample_to_year VARCHAR(255),
+        work_sample_to_month VARCHAR(255),
+        currently_working BOOLEAN DEFAULT FALSE,
+
+        -- Certification
+        certification_name VARCHAR(255),
+        certification_completion_id VARCHAR(255),
+        certification_url VARCHAR(255),
+        
+        validity_from_month VARCHAR(255),
+        validity_from_year VARCHAR(255),
+        validity_to_month VARCHAR(255),
+        validity_to_year VARCHAR(255),
+        
+        certificate_does_not_expire BOOLEAN DEFAULT FALSE,
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id)
+      )
+    `);
+    
     // JObs applications/response
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS job_applications (
