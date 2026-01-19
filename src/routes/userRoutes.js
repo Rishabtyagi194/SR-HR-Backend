@@ -13,7 +13,7 @@ router.post(
   '/register',
   [
     body('full_name').trim().notEmpty().withMessage('Full name required'),
-    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+    body('email').isEmail().withMessage('Valid email required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('phone').optional().isMobilePhone().withMessage('Invalid phone number'),
   ],
