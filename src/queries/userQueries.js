@@ -81,7 +81,7 @@ class UserQueries {
 
         profile.notice_period || null,
         profile.expected_salary || null,
-        
+
         profile.resume_url || null,
         profile.resume_public_id || null,
       ],
@@ -110,7 +110,7 @@ class UserQueries {
       'phone',
       'email',
       'availability_to_join',
-      'Expected_last_working_day'
+      'Expected_last_working_day',
     ];
 
     // Build dynamic SET clause
@@ -122,7 +122,6 @@ class UserQueries {
         fields.push(`${key} = ?`);
         values.push(profile[key]);
       }
-
     }
 
     if (fields.length === 0) {
@@ -139,7 +138,6 @@ class UserQueries {
     const [res] = await getWritePool().execute(sql, values);
     return res.affectedRows > 0;
   }
-
 
   // Update full profiles
   async updateProfile(userId, profile = {}) {
@@ -345,12 +343,12 @@ class UserQueries {
       employment_type: exp.employment_type ?? existing.employment_type,
       total_exp_year: exp.total_exp_year ?? existing.total_exp_year,
       total_exp_months: exp.total_exp_months ?? existing.total_exp_months,
-     
+
       company_name: exp.company_name ?? existing.company_name,
       job_title: exp.job_title ?? existing.job_title,
       joining_date_year: exp.joining_date_year ?? existing.joining_date_year,
       joining_date_months: exp.joining_date_months ?? existing.joining_date_months,
-      
+
       salary_currency: exp.salary_currency ?? existing.salary_currency,
       current_salary: exp.current_salary ?? existing.current_salary,
       skills_used: exp.skills_used ?? existing.skills_used,
@@ -360,7 +358,7 @@ class UserQueries {
       job_profile: exp.job_profile ?? existing.job_profile,
       notice_period: exp.notice_period ?? existing.notice_period,
       Expected_last_working_day: exp.Expected_last_working_day ?? existing.Expected_last_working_day,
-      
+
       start_date: exp.start_date ?? existing.start_date,
       end_date: exp.end_date ?? existing.end_date,
     };
@@ -460,6 +458,217 @@ class UserQueries {
       [userId],
     );
     return rows;
+  }
+
+  /* -------------------------- PROJECTS -------------------------- */
+
+  // ADD SINGLE OR MULTIPLE PROJECTS
+  async addProject(userId, projects) {
+    const projectArray = Array.isArray(projects) ? projects : [projects];
+    if (!projectArray.length) throw new Error('No projects provided');
+
+    const values = projectArray.map((p) => [
+      userId,
+      p.project_title,
+      p.client,
+      p.project_status,
+      p.work_from_year,
+      p.work_from_month,
+      p.work_to_year,
+      p.work_to_month,
+      p.project_details,
+    ]);
+
+    await getWritePool().query(
+      `INSERT INTO user_projects
+     (user_id, project_title, client, project_status,
+      work_from_year, work_from_month, work_to_year, work_to_month, project_details)
+     VALUES ?`,
+      [values],
+    );
+
+    return { inserted: values.length };
+  }
+
+  // UPDATE PROJECT
+  async updateProject(userId, projectId, project) {
+    const [rows] = await getReadPool().execute(`SELECT * FROM user_projects WHERE id = ? AND user_id = ?`, [projectId, userId]);
+
+    if (!rows.length) throw new Error('Project not found');
+
+    const existing = rows[0];
+
+    const updated = {
+      project_title: project.project_title ?? existing.project_title,
+      client: project.client ?? existing.client,
+      project_status: project.project_status ?? existing.project_status,
+      work_from_year: project.work_from_year ?? existing.work_from_year,
+      work_from_month: project.work_from_month ?? existing.work_from_month,
+      work_to_year: project.work_to_year ?? existing.work_to_year,
+      work_to_month: project.work_to_month ?? existing.work_to_month,
+      project_details: project.project_details ?? existing.project_details,
+    };
+
+    const [res] = await getWritePool().execute(
+      `UPDATE user_projects SET
+      project_title = ?, client = ?, project_status = ?,
+      work_from_year = ?, work_from_month = ?,
+      work_to_year = ?, work_to_month = ?,
+      project_details = ?
+     WHERE id = ? AND user_id = ?`,
+      [
+        updated.project_title,
+        updated.client,
+        updated.project_status,
+        updated.work_from_year,
+        updated.work_from_month,
+        updated.work_to_year,
+        updated.work_to_month,
+        updated.project_details,
+        projectId,
+        userId,
+      ],
+    );
+
+    return res.affectedRows > 0;
+  }
+
+  // LIST PROJECTS
+  async listProjects(userId) {
+    const [rows] = await getReadPool().execute(`SELECT * FROM user_projects WHERE user_id = ? ORDER BY id DESC`, [userId]);
+    return rows;
+  }
+
+  // DELETE PROJECT
+  async deleteProject(userId, projectId) {
+    const [res] = await getWritePool().execute(`DELETE FROM user_projects WHERE id = ? AND user_id = ?`, [projectId, userId]);
+    return res.affectedRows > 0;
+  }
+
+  /* ---------------------- ACCOMPLISHMENTS ---------------------- */
+
+  // ADD
+  async addAccomplishment(userId, data) {
+    const [res] = await getWritePool().execute(
+      `INSERT INTO user_accomplishments
+     (user_id, social_profile, social_profile_url, social_profile_description,
+      work_sample_title, work_sample_url, work_sample_description,
+      work_sample_from_year, work_sample_from_month,
+      work_sample_to_year, work_sample_to_month, currently_working,
+      certification_name, certification_completion_id, certification_url,
+      validity_from_month, validity_from_year,
+      validity_to_month, validity_to_year, certificate_does_not_expire)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        userId,
+        data.social_profile,
+        data.social_profile_url,
+        data.social_profile_description,
+        data.work_sample_title,
+        data.work_sample_url,
+        data.work_sample_description,
+        data.work_sample_from_year,
+        data.work_sample_from_month,
+        data.work_sample_to_year,
+        data.work_sample_to_month,
+        data.currently_working || false,
+        data.certification_name,
+        data.certification_completion_id,
+        data.certification_url,
+        data.validity_from_month,
+        data.validity_from_year,
+        data.validity_to_month,
+        data.validity_to_year,
+        data.certificate_does_not_expire || false,
+      ],
+    );
+
+    return res.insertId;
+  }
+
+  // UPDATE
+  async updateAccomplishment(userId, id, data = {}) {
+    const [rows] = await getReadPool().execute(`SELECT * FROM user_accomplishments WHERE id = ? AND user_id = ?`, [id, userId]);
+
+    if (!rows.length) throw new Error('Accomplishment not found');
+
+    const existing = rows[0];
+
+    const updated = {
+      social_profile: data.social_profile ?? existing.social_profile,
+      social_profile_url: data.social_profile_url ?? existing.social_profile_url,
+      social_profile_description: data.social_profile_description ?? existing.social_profile_description,
+
+      work_sample_title: data.work_sample_title ?? existing.work_sample_title,
+      work_sample_url: data.work_sample_url ?? existing.work_sample_url,
+      work_sample_description: data.work_sample_description ?? existing.work_sample_description,
+
+      work_sample_from_year: data.work_sample_from_year ?? existing.work_sample_from_year,
+      work_sample_from_month: data.work_sample_from_month ?? existing.work_sample_from_month,
+      work_sample_to_year: data.work_sample_to_year ?? existing.work_sample_to_year,
+      work_sample_to_month: data.work_sample_to_month ?? existing.work_sample_to_month,
+      currently_working: data.currently_working ?? existing.currently_working,
+
+      certification_name: data.certification_name ?? existing.certification_name,
+      certification_completion_id: data.certification_completion_id ?? existing.certification_completion_id,
+      certification_url: data.certification_url ?? existing.certification_url,
+
+      validity_from_month: data.validity_from_month ?? existing.validity_from_month,
+      validity_from_year: data.validity_from_year ?? existing.validity_from_year,
+      validity_to_month: data.validity_to_month ?? existing.validity_to_month,
+      validity_to_year: data.validity_to_year ?? existing.validity_to_year,
+
+      certificate_does_not_expire: data.certificate_does_not_expire ?? existing.certificate_does_not_expire,
+    };
+
+    const [res] = await getWritePool().execute(
+      `UPDATE user_accomplishments SET
+      social_profile = ?, social_profile_url = ?, social_profile_description = ?,
+      work_sample_title = ?, work_sample_url = ?, work_sample_description = ?,
+      work_sample_from_year = ?, work_sample_from_month = ?,
+      work_sample_to_year = ?, work_sample_to_month = ?, currently_working = ?,
+      certification_name = ?, certification_completion_id = ?, certification_url = ?,
+      validity_from_month = ?, validity_from_year = ?,
+      validity_to_month = ?, validity_to_year = ?, certificate_does_not_expire = ?
+     WHERE id = ? AND user_id = ?`,
+      [
+        updated.social_profile,
+        updated.social_profile_url,
+        updated.social_profile_description,
+        updated.work_sample_title,
+        updated.work_sample_url,
+        updated.work_sample_description,
+        updated.work_sample_from_year,
+        updated.work_sample_from_month,
+        updated.work_sample_to_year,
+        updated.work_sample_to_month,
+        updated.currently_working,
+        updated.certification_name,
+        updated.certification_completion_id,
+        updated.certification_url,
+        updated.validity_from_month,
+        updated.validity_from_year,
+        updated.validity_to_month,
+        updated.validity_to_year,
+        updated.certificate_does_not_expire,
+        id,
+        userId,
+      ],
+    );
+
+    return res.affectedRows > 0;
+  }
+
+  // LIST
+  async listAccomplishments(userId) {
+    const [rows] = await getReadPool().execute(`SELECT * FROM user_accomplishments WHERE user_id = ? ORDER BY id DESC`, [userId]);
+    return rows;
+  }
+
+  // DELETE
+  async deleteAccomplishment(userId, id) {
+    const [res] = await getWritePool().execute(`DELETE FROM user_accomplishments WHERE id = ? AND user_id = ?`, [id, userId]);
+    return res.affectedRows > 0;
   }
 }
 

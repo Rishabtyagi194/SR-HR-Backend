@@ -95,6 +95,28 @@ router.patch('/skills/update/:id', Authenticate, userController.updateSkill);
 // Delete a specific skill
 router.delete('/skills/delete/:id', Authenticate, userController.deleteSkill);
 
+/* -------------------------- PROJECTS -------------------------- */
+
+// Add project(s)
+router.post('/projects', Authenticate, userController.addProject);
+
+// Get all projects
+router.get('/projects', Authenticate, userController.getProjects);
+
+// Update project
+router.patch('/projects/update/:id', Authenticate, userController.updateProject);
+
+// Delete project
+router.delete('/projects/delete/:id', Authenticate, userController.deleteProject);
+
+/* ---------------------- ACCOMPLISHMENTS ---------------------- */
+
+router.post('/accomplishments', Authenticate, userController.addAccomplishment);
+router.get('/accomplishments', Authenticate, userController.getAccomplishments);
+router.patch('/accomplishments/update/:id', Authenticate, userController.updateAccomplishment);
+router.delete('/accomplishments/delete/:id', Authenticate, userController.deleteAccomplishment);
+
+
 /* ----------------------------- ACCOUNT MANAGEMENT ----------------------------- */
 
 // Delete user account (optional)

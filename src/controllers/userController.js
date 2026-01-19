@@ -84,7 +84,6 @@ export const updateBasicDetails = async (req, res) => {
   }
 };
 
-
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -115,7 +114,6 @@ export const updateProfile = async (req, res) => {
 
 //     const oldPublicId = user?.[0]?.resume_public_id;
 
-  
 //     //  Upload new resume to Cloudinary
 //     const uploadResult = await uploadUserResume(localFilePath, req.user.id);
 
@@ -129,7 +127,6 @@ export const updateProfile = async (req, res) => {
 
 //     //  Update DB
 //     const result = await UserService.uploadResume(userId, resumeUrl, resumePublicId);
-
 
 //       //  Delete old resume from Cloudinary if exists
 //     if (oldPublicId) {
@@ -156,10 +153,7 @@ export const uploadResume = async (req, res) => {
     }
 
     // Fetch old resume public_id (if any)
-    const [[profile]] = await getReadPool().execute(
-      `SELECT resume_public_id FROM user_profiles WHERE user_id = ?`,
-      [userId]
-    );
+    const [[profile]] = await getReadPool().execute(`SELECT resume_public_id FROM user_profiles WHERE user_id = ?`, [userId]);
 
     const oldPublicId = profile?.resume_public_id || null;
 
@@ -188,28 +182,24 @@ export const uploadResume = async (req, res) => {
     console.error('Error in uploadResume:', error);
     return res.status(500).json({ message: error.message });
   }
-}; 
+};
 
 export const getResume = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Fetch old resume 
-    const [[resume]] = await getReadPool().execute(
-      `SELECT resume_url FROM user_profiles WHERE user_id = ?`,
-      [userId]
-    );
+    // Fetch old resume
+    const [[resume]] = await getReadPool().execute(`SELECT resume_url FROM user_profiles WHERE user_id = ?`, [userId]);
 
     return res.status(200).json({
       message: 'Resume get successfully',
-      resume
+      resume,
     });
   } catch (error) {
     console.error('Error in uploadResume:', error);
     return res.status(500).json({ message: error.message });
   }
-}; 
-
+};
 
 // =================== EDUCATION ===================
 export const addEducation = async (req, res) => {
@@ -338,6 +328,93 @@ export const deleteSkill = async (req, res) => {
   try {
     await UserService.deleteSkill(req.params.id);
     res.json({ message: 'Skill deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* -------------------------- PROJECTS -------------------------- */
+
+export const addProject = async (req, res) => {
+  try {
+    await UserService.addProject(req.user.id, req.body);
+    res.status(201).json({ message: 'Project added successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getProjects = async (req, res) => {
+  try {
+    const projects = await UserService.listProjects(req.user.id);
+    res.json({
+      message: 'Projects fetched successfully',
+      total: projects.length,
+      data: projects,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateProject = async (req, res) => {
+  try {
+    await UserService.updateProject(req.user.id, req.params.id, req.body);
+    res.json({ message: 'Project updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteProject = async (req, res) => {
+  try {
+    await UserService.deleteProject(req.user.id, req.params.id);
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ---------------------- ACCOMPLISHMENTS ---------------------- */
+
+export const addAccomplishment = async (req, res) => {
+  try {
+    await UserService.addAccomplishment(req.user.id, req.body);
+    res.status(201).json({ message: 'Accomplishment added successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getAccomplishments = async (req, res) => {
+  try {
+    const data = await UserService.listAccomplishments(req.user.id);
+    res.json({
+      message: 'Accomplishments fetched successfully',
+      total: data.length,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateAccomplishment = async (req, res) => {
+  // console.log('RAW BODY:', req.body);
+  // console.log('HEADERS:', req.headers['content-type']);
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({ message: 'No fields provided to update' });
+  }
+
+  await UserService.updateAccomplishment(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Accomplishment updated successfully' });
+};
+
+export const deleteAccomplishment = async (req, res) => {
+  try {
+    await UserService.deleteAccomplishment(req.user.id, req.params.id);
+    res.json({ message: 'Accomplishment deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

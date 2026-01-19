@@ -21,6 +21,8 @@ export const dropAllTables = async () => {
       'user_education',
       'user_experience',
       'user_skills',
+      'user_projects',
+      'user_accomplishments',
       'user_applications',
       'Excel_data_uploads',
       'user_logs',

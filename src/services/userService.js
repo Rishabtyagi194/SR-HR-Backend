@@ -60,15 +60,14 @@ class UserService {
     email,
     password,
     phone,
-    
+
     role = 'job_seeker',
-    
+
     work_status,
     current_location_country,
     current_location,
-    
-    availability_to_join,
 
+    availability_to_join,
   }) {
     const existing = await UserQueries.findByEmail(email);
     if (existing) {
@@ -289,6 +288,43 @@ class UserService {
     );
     return { user_id: userId, resume_url: resumeUrl };
   }
+
+  /* -------------------------- PROJECTS -------------------------- */
+
+  async addProject(userId, project) {
+    return await UserQueries.addProject(userId, project);
+  }
+
+  async updateProject(userId, projectId, project) {
+    return await UserQueries.updateProject(userId, projectId, project);
+  }
+
+  async listProjects(userId) {
+    return await UserQueries.listProjects(userId);
+  }
+
+  async deleteProject(userId, projectId) {
+    return await UserQueries.deleteProject(userId, projectId);
+  }
+
+  /* ---------------------- ACCOMPLISHMENTS ---------------------- */
+
+  async addAccomplishment(userId, data) {
+    return await UserQueries.addAccomplishment(userId, data);
+  }
+
+  async updateAccomplishment(userId, id, data) {
+    return await UserQueries.updateAccomplishment(userId, id, data);
+  }
+
+  async listAccomplishments(userId) {
+    return await UserQueries.listAccomplishments(userId);
+  }
+
+  async deleteAccomplishment(userId, id) {
+    return await UserQueries.deleteAccomplishment(userId, id);
+  }
+  
 }
 
 export default new UserService();
