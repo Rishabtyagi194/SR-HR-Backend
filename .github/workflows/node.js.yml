@@ -30,7 +30,7 @@ jobs:
       - name: Deploy main branch to Production
         if: github.ref == 'refs/heads/main'
         run: |
-          ssh -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227 "
+          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no rozgardwaruser@147.93.72.227 << 'EOF'
             cd /var/www/prod/SR-HR-Backend &&
             git fetch origin main &&
             git reset --hard origin/main &&
