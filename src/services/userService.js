@@ -185,12 +185,14 @@ class UserService {
     const user = await UserQueries.findById(userId);
     if (!user) throw new Error('User not found');
 
-    const [educations, experiences, skills, projects, accomplishments] = await Promise.all([
+    const [educations, experiences, skills, projects, listSocialProfiles, listWorkSamples, listCertifications] = await Promise.all([
       UserQueries.listEducations(userId),
       UserQueries.listExperiences(userId),
       UserQueries.listSkills(userId),
       UserQueries.listProjects(userId),
-      UserQueries.listAccomplishments(userId),
+      UserQueries.listSocialProfiles(userId),
+      UserQueries.listWorkSamples(userId),
+      UserQueries.listCertifications(userId),
     ]);
 
     return {
@@ -200,7 +202,9 @@ class UserService {
         experiences,
         skills,
         projects,
-        accomplishments,
+        listSocialProfiles,
+        listWorkSamples,
+        listCertifications
       },
     };
   }
