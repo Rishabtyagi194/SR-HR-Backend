@@ -19,6 +19,7 @@ import searchRoutes from './routes/searchFilterRoutes.js';
 import saveJobsRoutes from './routes/savedJobRoutes.js';
 import LocationRoutes from './routes/locationRoutes.js'
 import consultantRoutes from './routes/consultantAuthRoutes.js'
+import contactUsRoutes from './routes/contactUsRoutes.js'
 
 const app = express();
 
@@ -54,5 +55,6 @@ app.use('/api/search', searchRoutes);
 app.use('/api/savejob', saveJobsRoutes);
 app.use('/api/location', LocationRoutes);
 app.use('/api/consultant', consultantRoutes);
+app.use('/api/contcat-us', contactUsRoutes);
 
 export default app;

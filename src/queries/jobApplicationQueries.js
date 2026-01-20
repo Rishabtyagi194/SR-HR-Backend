@@ -29,18 +29,28 @@ export const jobApplicationQueries = {
       ja.user_id,
       ja.application_status,
       ja.applied_at,
+      
       u.full_name,
       u.email,
       u.phone,
+      up.gender,
+      u.work_status,
+      u.total_experience_years,
+      u.total_experience_months,
+      u.availability_to_join,
+
+      up.marital_status,
+      up.dob,
+      up.permanent_address,
+      up.hometown,
+      up.pincode,
+
       up.profile_title,
-      up.about_me,
-      up.current_location,
-      up.preferred_location,
-      up.total_experience_years,
-      up.total_experience_months,
-      up.expected_salary,
-      up.notice_period,
+      up.resume_headline,
+      up.profile_summary,
+      up.disability_status,
       up.resume_url
+      
     FROM job_applications ja
     JOIN users u ON ja.user_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
@@ -221,12 +231,12 @@ export const jobApplicationQueries = {
 
 //  Fetch user's education, experience, and skills
   getUserEducations: `
-    SELECT degree, specialization, institute_name, start_year, end_year, percentage
+    SELECT degree, institute_name, specialization, course_type, start_year, end_year, percentage
     FROM user_education WHERE user_id = ?
   `,
 
   getUserExperiences: `
-    SELECT company_name, job_title, start_date, end_date, currently_working, description
+    SELECT is_current_employment, employment_type, company_name, job_title, job_profile, start_date, end_date
     FROM user_experience WHERE user_id = ?
   `,
 
