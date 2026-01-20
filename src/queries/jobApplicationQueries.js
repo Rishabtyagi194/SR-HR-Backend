@@ -245,6 +245,20 @@ export const jobApplicationQueries = {
     FROM user_skills WHERE user_id = ?
   `,
 
+  getUserProjects: `
+    SELECT project_title, project_details, project_status, work_from_year,
+    work_from_month, work_to_year, work_to_month
+    FROM user_projects WHERE user_id = ?
+  `,
+
+  getUserAccomplishments: `
+    SELECT social_profile, social_profile_url, social_profile_description, 
+    work_sample_title, work_sample_url, work_sample_description,
+    certification_name, certification_completion_id, certification_url
+    FROM user_accomplishments WHERE user_id = ?
+  `,
+
+
 // ------------------------------ consultant ------------------------------------
 
   getConsultantApplicationsByHotVacancyJobId: `
@@ -371,7 +385,6 @@ getHotVacancyJobByJobIdAndOrgId: `
       AND organisation_id = ?
     LIMIT 1
   ` 
-
 };
 
 // export const jobApplicationQueries = {
