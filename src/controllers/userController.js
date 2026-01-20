@@ -377,48 +377,72 @@ export const deleteProject = async (req, res) => {
 
 /* ---------------------- ACCOMPLISHMENTS ---------------------- */
 
-export const addAccomplishment = async (req, res) => {
-  try {
-    await UserService.addAccomplishment(req.user.id, req.body);
-    res.status(201).json({ message: 'Accomplishment added successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+/* -------- SOCIAL PROFILES -------- */
+
+export const addSocialProfile = async (req, res) => {
+  await UserService.addSocialProfile(req.user.id, req.body);
+  res.status(201).json({ message: 'Social profile added' });
 };
 
-export const getAccomplishments = async (req, res) => {
-  try {
-    const data = await UserService.listAccomplishments(req.user.id);
-    res.json({
-      message: 'Accomplishments fetched successfully',
-      total: data.length,
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+export const getSocialProfiles = async (req, res) => {
+  const data = await UserService.listSocialProfiles(req.user.id);
+  res.json({ total: data.length, data });
 };
 
-export const updateAccomplishment = async (req, res) => {
-  // console.log('RAW BODY:', req.body);
-  // console.log('HEADERS:', req.headers['content-type']);
-
-  if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).json({ message: 'No fields provided to update' });
-  }
-
-  await UserService.updateAccomplishment(req.user.id, req.params.id, req.body);
-  res.json({ message: 'Accomplishment updated successfully' });
+export const updateSocialProfile = async (req, res) => {
+  await UserService.updateSocialProfile(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Social profile updated' });
 };
 
-export const deleteAccomplishment = async (req, res) => {
-  try {
-    await UserService.deleteAccomplishment(req.user.id, req.params.id);
-    res.json({ message: 'Accomplishment deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+export const deleteSocialProfile = async (req, res) => {
+  await UserService.deleteSocialProfile(req.user.id, req.params.id);
+  res.json({ message: 'Social profile deleted' });
 };
+
+/* -------- WORK SAMPLES -------- */
+
+export const addWorkSample = async (req, res) => {
+  await UserService.addWorkSample(req.user.id, req.body);
+  res.status(201).json({ message: 'Work sample added' });
+};
+
+export const getWorkSamples = async (req, res) => {
+  const data = await UserService.listWorkSamples(req.user.id);
+  res.json({ total: data.length, data });
+};
+
+export const updateWorkSample = async (req, res) => {
+  await UserService.updateWorkSample(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Work sample updated' });
+};
+
+export const deleteWorkSample = async (req, res) => {
+  await UserService.deleteWorkSample(req.user.id, req.params.id);
+  res.json({ message: 'Work sample deleted' });
+};
+
+/* -------- CERTIFICATIONS -------- */
+
+export const addCertification = async (req, res) => {
+  await UserService.addCertification(req.user.id, req.body);
+  res.status(201).json({ message: 'Certification added' });
+};
+
+export const getCertifications = async (req, res) => {
+  const data = await UserService.listCertifications(req.user.id);
+  res.json({ total: data.length, data });
+};
+
+export const updateCertification = async (req, res) => {
+  await UserService.updateCertification(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Certification updated' });
+};
+
+export const deleteCertification = async (req, res) => {
+  await UserService.deleteCertification(req.user.id, req.params.id);
+  res.json({ message: 'Certification deleted' });
+};
+
 
 // ***********************************************************************************************
 
