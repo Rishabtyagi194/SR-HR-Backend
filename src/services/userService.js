@@ -200,7 +200,7 @@ class UserService {
         experiences,
         skills,
         projects,
-        accomplishments
+        accomplishments,
       },
     };
   }
@@ -313,22 +313,47 @@ class UserService {
 
   /* ---------------------- ACCOMPLISHMENTS ---------------------- */
 
-  async addAccomplishment(userId, data) {
-    return await UserQueries.addAccomplishment(userId, data);
+  /* -------- SOCIAL -------- */
+  addSocialProfile(userId, data) {
+    return UserQueries.addSocialProfile(userId, data);
+  }
+  updateSocialProfile(userId, id, data) {
+    return UserQueries.updateSocialProfile(userId, id, data);
+  }
+  listSocialProfiles(userId) {
+    return UserQueries.listSocialProfiles(userId);
+  }
+  deleteSocialProfile(userId, id) {
+    return UserQueries.deleteSocialProfile(userId, id);
   }
 
-  async updateAccomplishment(userId, id, data) {
-    return await UserQueries.updateAccomplishment(userId, id, data);
+  /* -------- WORK -------- */
+  addWorkSample(userId, data) {
+    return UserQueries.addWorkSample(userId, data);
+  }
+  updateWorkSample(userId, id, data) {
+    return UserQueries.updateWorkSample(userId, id, data);
+  }
+  listWorkSamples(userId) {
+    return UserQueries.listWorkSamples(userId);
+  }
+  deleteWorkSample(userId, id) {
+    return UserQueries.deleteWorkSample(userId, id);
   }
 
-  async listAccomplishments(userId) {
-    return await UserQueries.listAccomplishments(userId);
+  /* -------- CERT -------- */
+  addCertification(userId, data) {
+    return UserQueries.addCertification(userId, data);
   }
-
-  async deleteAccomplishment(userId, id) {
-    return await UserQueries.deleteAccomplishment(userId, id);
+  updateCertification(userId, id, data) {
+    return UserQueries.updateCertification(userId, id, data);
   }
-  
+  listCertifications(userId) {
+    return UserQueries.listCertifications(userId);
+  }
+  deleteCertification(userId, id) {
+    return UserQueries.deleteCertification(userId, id);
+  }
 }
 
 export default new UserService();

@@ -576,39 +576,65 @@ export const initializeDatabase = async () => {
         INDEX idx_user_id (user_id)
       )
     `);
-    
-    // users Accomplishments
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS user_accomplishments (
+
+     await connection.execute(`
+     CREATE TABLE IF NOT EXISTS user_social_profiles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+
+      social_profile VARCHAR(255) NOT NULL,
+      social_profile_url VARCHAR(255),
+      social_profile_description VARCHAR(255),
+
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_user_id (user_id)
+    );
+
+    `);
+
+
+     await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_work_samples (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
 
-        -- Social / Online profile
-        social_profile VARCHAR(255),
-        social_profile_url VARCHAR(255),
-        social_profile_description VARCHAR(255),
-
-        -- Work sample
-        work_sample_title VARCHAR(255),
+        work_sample_title VARCHAR(255) NOT NULL,
         work_sample_url VARCHAR(255),
         work_sample_description TEXT,
-        
-        work_sample_from_year VARCHAR(255),
-        work_sample_from_month VARCHAR(255),
-        work_sample_to_year VARCHAR(255),
-        work_sample_to_month VARCHAR(255),
+
+        work_from_year VARCHAR(4),
+        work_from_month VARCHAR(20),
+        work_to_year VARCHAR(4),
+        work_to_month VARCHAR(20),
+
         currently_working BOOLEAN DEFAULT FALSE,
 
-        -- Certification
-        certification_name VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id)
+      );
+    `);
+    
+    // users Accomplishments
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_certifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+
+        certification_name VARCHAR(255) NOT NULL,
         certification_completion_id VARCHAR(255),
         certification_url VARCHAR(255),
-        
-        validity_from_month VARCHAR(255),
-        validity_from_year VARCHAR(255),
-        validity_to_month VARCHAR(255),
-        validity_to_year VARCHAR(255),
-        
+
+        validity_from_month VARCHAR(20),
+        validity_from_year VARCHAR(4),
+        validity_to_month VARCHAR(20),
+        validity_to_year VARCHAR(4),
+
         certificate_does_not_expire BOOLEAN DEFAULT FALSE,
 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -616,7 +642,7 @@ export const initializeDatabase = async () => {
 
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id)
-      )
+      );
     `);
     
     // JObs applications/response
@@ -854,7 +880,21 @@ export const initializeDatabase = async () => {
         job_ref_id
       )
       );
+    `);
 
+     await connection.execute(`
+      CREATE TABLE IF NOT EXISTS contactusLeads (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        mobile_no VARCHAR(255),
+        area_of_concern VARCHAR(50),
+        message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_name (name),
+        INDEX idx_email (email)
+      );
     `);
 
 

@@ -111,11 +111,23 @@ router.delete('/projects/delete/:id', Authenticate, userController.deleteProject
 
 /* ---------------------- ACCOMPLISHMENTS ---------------------- */
 
-router.post('/accomplishments', Authenticate, userController.addAccomplishment);
-router.get('/accomplishments', Authenticate, userController.getAccomplishments);
-router.patch('/accomplishments/update/:id', Authenticate, userController.updateAccomplishment);
-router.delete('/accomplishments/delete/:id', Authenticate, userController.deleteAccomplishment);
+// social profiles
+router.post('/social-profiles', Authenticate, userController.addSocialProfile);
+router.get('/social-profiles', Authenticate, userController.getSocialProfiles);
+router.patch('/social-profiles/update/:id', Authenticate, userController.updateSocialProfile);
+router.delete('/social-profiles/delete/:id', Authenticate, userController.deleteSocialProfile);
 
+// work samples
+router.post('/work-samples', Authenticate, userController.addWorkSample);
+router.get('/work-samples', Authenticate, userController.getWorkSamples);
+router.patch('/work-samples/update/:id', Authenticate, userController.updateWorkSample);
+router.delete('/work-samples/delete/:id', Authenticate, userController.deleteWorkSample);
+
+// certifications
+router.post('/certifications', Authenticate, userController.addCertification);
+router.get('/certifications', Authenticate, userController.getCertifications);
+router.patch('/certifications/update/:id', Authenticate, userController.updateCertification);
+router.delete('/certifications/delete/:id', Authenticate, userController.deleteCertification);
 
 /* ----------------------------- ACCOUNT MANAGEMENT ----------------------------- */
 
