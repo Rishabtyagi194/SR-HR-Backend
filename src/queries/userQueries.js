@@ -18,7 +18,7 @@ class UserQueries {
   async findById(userId) {
     const [rows] = await getReadPool().execute(
       `SELECT 
-       u.id, u.full_name, u.email, u.password, u.phone, u.work_status, u.total_experience_years, u.total_experience_months, u.current_salary_currency, u.current_salary, u.salary_breakdown,
+       u.id, u.full_name, u.email, u.password, u.phone, u.profile_image_url, u.profile_image_public_id, u.work_status, u.total_experience_years, u.total_experience_months, u.current_salary_currency, u.current_salary, u.salary_breakdown,
        u.current_location_country, u.current_location, u.availability_to_join, u.Expected_last_working_day, u.is_active, u.is_mobile_verified, u.is_email_verified, u.created_at, u.updated_at,
        up.gender, up.marital_status , up.dob, up.category, up.work_permit_for_usa, up.Work_permit_for_other_countries, up.permanent_address, up.hometown, up.pincode, up.profile_title, up.resume_headline, up.profile_summary,  
        up.profile_completion, up.disability_status, up.key_skills, up.preferred_location, up.willingToRelocate,
@@ -35,7 +35,7 @@ class UserQueries {
 
   static async getProfile(userId) {
     const [rows] = await getReadPool().execute(
-      `SELECT u.id, u.full_name, u.email, u.phone, u.work_status, u.current_location_country, u.availability_to_join, u.created_at, u.updated_at,
+      `SELECT u.id, u.full_name, u.email, u.phone, u.profile_image_url, u.profile_image_public_id, u.work_status, u.current_location_country, u.availability_to_join, u.created_at, u.updated_at,
        up.gender, up.marital_status , up.dob, up.category, up.work_permit_for_usa, up.Work_permit_for_other_countries, up.permanent_address, up.hometown, up.pincode, up.profile_title, up.resume_headline, up.profile_summary,  
        up.profile_completion, up.disability_status, up.key_skills, up.preferred_location, up.willingToRelocate,
        up.notice_period, up.expected_salary, up.resume_url, up.resume_public_id
@@ -99,6 +99,8 @@ class UserQueries {
     // Filter only allowed columns
     const allowedFields = [
       'full_name',
+      'profile_image_url',
+      'profile_image_public_id',
       'work_status',
       'total_experience_years',
       'total_experience_months',
@@ -139,8 +141,23 @@ class UserQueries {
     return res.affectedRows > 0;
   }
 
+  // get basic profile
+  async getBasicById(userId) {
+    const [rows] = await getReadPool().execute(
+      `SELECT 
+      id, full_name, email, phone,
+      profile_image_url, profile_image_public_id,
+      work_status, total_experience_years, total_experience_months,
+      current_location_country, current_location,
+      availability_to_join, Expected_last_working_day
+     FROM users WHERE id = ?`,
+      [userId],
+    );
+    return rows[0];
+  }
+
   // Update full profiles
-  async updateProfile(userId, profile = {}) {
+  async updatePersonalDetails(userId, profile = {}) {
     // Filter only allowed columns
     const allowedFields = [
       'gender',
@@ -193,6 +210,22 @@ class UserQueries {
     const [res] = await getWritePool().execute(sql, values);
     return res.affectedRows > 0;
   }
+
+  async getPersonalDetailsById(userId) {
+    const [rows] = await getReadPool().execute(
+      `SELECT 
+        user_id, gender, marital_status, dob,
+        category, work_permit_for_usa, Work_permit_for_other_countries,
+        permanent_address, hometown, pincode,
+        profile_title, resume_headline, profile_summary,
+        profile_completion, disability_status, key_skills, preferred_location,
+        willingToRelocate, notice_period, expected_salary, resume_url, resume_public_id
+      FROM user_profiles WHERE user_id = ?`,
+      [userId],
+    );
+    return rows[0];
+  }
+
   //  ---------------------------- Educations ---------------------------
 
   // async updateProfile(userId, profile = {}) {
@@ -602,7 +635,7 @@ class UserQueries {
   // add
   async addWorkSample(userId, data) {
     // console.log("data", data);
-    
+
     const payload = {
       work_sample_title: data.work_sample_title ?? null,
       work_sample_url: data.work_sample_url ?? null,
@@ -643,7 +676,7 @@ class UserQueries {
      ORDER BY id DESC`,
       [userId],
     );
-    
+
     return rows;
   }
 
