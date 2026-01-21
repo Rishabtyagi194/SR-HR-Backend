@@ -414,6 +414,7 @@ export const initializeDatabase = async () => {
         notice_period VARCHAR(50),
         expected_salary VARCHAR(50),
 
+        resume_title VARCHAR(500),
         resume_url VARCHAR(500),
         resume_public_id VARCHAR(255),
        
