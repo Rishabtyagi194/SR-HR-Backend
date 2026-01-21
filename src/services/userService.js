@@ -315,14 +315,14 @@ class UserService {
   }
 
   //  ------------------------Resume ---------------------------
-  async uploadResume(userId, resumeUrl, publicId) {
+  async uploadResume(userId, originalFileName, resumeUrl, publicId) {
     await getWritePool().execute(
       `UPDATE user_profiles 
-     SET resume_url = ?, resume_public_id = ?, updated_at = NOW() 
+     SET resume_title = ?, resume_url = ?, resume_public_id = ?, updated_at = NOW() 
      WHERE user_id = ?`,
-      [resumeUrl, publicId, userId],
+      [originalFileName, resumeUrl, publicId, userId],
     );
-    return { user_id: userId, resume_url: resumeUrl };
+    return { user_id: userId, title: originalFileName, resume_url: resumeUrl };
   }
 
   /* -------------------------- PROJECTS -------------------------- */

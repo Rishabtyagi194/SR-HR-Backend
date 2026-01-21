@@ -185,6 +185,8 @@ export const uploadResume = async (req, res) => {
   try {
     const userId = req.user.id;
     const localFilePath = req.file?.path;
+    const originalFileName = req.file?.originalname;
+    // console.log("localFilePath", req.file?.originalname);
 
     if (!localFilePath) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -202,7 +204,7 @@ export const uploadResume = async (req, res) => {
     const resumePublicId = uploadResult.public_id;
 
     // Update DB
-    await UserService.uploadResume(userId, resumeUrl, resumePublicId);
+    await UserService.uploadResume(userId, originalFileName, resumeUrl, resumePublicId);
 
     // Delete old resume AFTER success
     if (oldPublicId) {
@@ -213,6 +215,7 @@ export const uploadResume = async (req, res) => {
       message: 'Resume updated successfully',
       data: {
         user_id: userId,
+        title: originalFileName,
         resume_url: resumeUrl,
       },
     });
@@ -227,7 +230,7 @@ export const getResume = async (req, res) => {
     const userId = req.user.id;
 
     // Fetch old resume
-    const [[resume]] = await getReadPool().execute(`SELECT resume_url FROM user_profiles WHERE user_id = ?`, [userId]);
+    const [[resume]] = await getReadPool().execute(`SELECT resume_title, resume_url FROM user_profiles WHERE user_id = ?`, [userId]);
 
     return res.status(200).json({
       message: 'Resume get successfully',
