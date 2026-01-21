@@ -242,7 +242,7 @@ export const jobApplicationQueries = {
   WHERE job_id = ?
 `,
 
-  //  Fetch user's education, experience, and skills
+  //  Fetch user's education, experience, skills, projects and accomplistments (social profile, sample work, certification)
   getUserEducations: `
     SELECT degree, institute_name, specialization, course_type, start_year, end_year, percentage
     FROM user_education WHERE user_id = ?
@@ -257,23 +257,28 @@ export const jobApplicationQueries = {
     SELECT skill_name, proficiency_level
     FROM user_skills WHERE user_id = ?
   `,
-
+  
+  // projects
   getUserProjects: `
     SELECT project_title, project_details, project_status, work_from_year,
     work_from_month, work_to_year, work_to_month
     FROM user_projects WHERE user_id = ?
   `,
 
+  // social profile
   getUsersocialProfile: `
     SELECT social_profile, social_profile_url, social_profile_description 
     FROM user_social_profiles WHERE user_id = ?
   `,
 
+  // sample work
   getUserWorkSample: `
     SELECT work_sample_title, work_sample_url, work_sample_description, 
     work_from_year, work_from_month, work_to_year, work_to_month
     FROM user_work_samples WHERE user_id = ?
   `,
+
+  // certification
   getUserCertification: `
     SELECT certification_name, certification_completion_id, certification_url
     FROM user_certifications WHERE user_id = ?

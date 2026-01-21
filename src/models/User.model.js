@@ -8,6 +8,9 @@ export default class User {
     phone,
     role = 'job_seeker',
 
+    profile_image_url = null,
+    profile_image_public_id = null,
+   
     work_status = null,
     total_experience_years = 0,
     total_experience_months = 0,
@@ -78,6 +81,9 @@ export default class User {
     this.otp_expires_at = otp_expires_at;
     this.last_login = last_login;
 
+    this.profile_image_url = profile_image_url;
+    this.profile_image_public_id = profile_image_public_id;
+    
     this.work_status = work_status;
     this.total_experience_years = total_experience_years;
     this.total_experience_months = total_experience_months;

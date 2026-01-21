@@ -32,11 +32,16 @@ router.get('/profile', Authenticate, userController.getProfile);
 router.get('/profile/:id', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), userController.getProfileById);
 
 // Update Basic profile
-router.patch('/profile/update/basic', Authenticate, userController.updateBasicDetails);
+router.patch('/profile/update/basic', Authenticate, upload.single('profileImage'), userController.updateBasicDetails);
+
+// get basic profile
+router.get('/basic', Authenticate, userController.getBasicDetails);
 
 // Update Basic profile
-router.patch('/profile/update', Authenticate, userController.updateProfile);
+router.patch('/profile/personal-details/update', Authenticate, userController.updateProfilePersonalDetails);
 
+// get personal profile details
+router.get('/personal-details', Authenticate, userController.getpersonalProfileDetails);
 
 /* ----------------------------- Resume  ---------------------------- */
 

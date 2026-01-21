@@ -3,12 +3,13 @@ import jwt from 'jsonwebtoken';
 import { getReadPool, getWritePool } from '../config/database.js';
 import UserQueries from '../queries/userQueries.js';
 import { generateOTP, sendVerificationOTP } from '../helpers/otpHelper.js';
+import { uploadOnCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || '10', 10);
 const JWT_SECRET = process.env.JWT_SECRET || 'abfa477a5f71155408d7e69fcc35abc378';
 
 class UserService {
-  //  ---------------------------- Signup ---------------------------
+  //  ------------------------------------------------------ Signup ----------------------------------------------------------------------------
 
   // async register({ full_name, password, role, Work_status, current_location_country, current_location, phone, availability_to_join, email }) {
   //   const existing = await UserQueries.findByEmail(email);
@@ -146,12 +147,12 @@ class UserService {
     }
   }
 
-  //  ---------------------------- Login ---------------------------
+  //  ------------------------------------------------------- Login -----------------------------------------------------------------
 
   //  Login only if verified (is_active = true)
   async login({ email, password }) {
     const user = await UserQueries.findByEmail(email);
-    console.log('user', user);
+    // console.log('user', user);
     // console.log('user.is_active', user.is_active);
 
     if (!user) throw new Error('Invalid credentials');
@@ -180,7 +181,7 @@ class UserService {
     };
   }
 
-  //  ---------------------------- Profile ---------------------------
+  //  ------------------------------------------------------ Profile ------------------------------------------------------------------------
   async getProfile(userId) {
     const user = await UserQueries.findById(userId);
     if (!user) throw new Error('User not found');
@@ -204,13 +205,31 @@ class UserService {
         projects,
         listSocialProfiles,
         listWorkSamples,
-        listCertifications
+        listCertifications,
       },
+    };
+  }
+
+  async updateProfileImage(userId, localFilePath) {
+    const user = await UserQueries.getBasicById(userId);
+
+    if (user?.profile_image_public_id) {
+      await deleteFromCloudinary(user.profile_image_public_id);
+    }
+
+    const uploaded = await uploadOnCloudinary(localFilePath, userId);
+
+    return {
+      url: uploaded.secure_url,
+      public_id: uploaded.public_id,
     };
   }
 
   async updateBasicProfile(userId, profile) {
     const [rows] = await getReadPool().execute(`SELECT id FROM users WHERE id = ?`, [userId]);
+    if (!rows.length) {
+      throw new Error('User not found');
+    }
 
     const updatedUser = await UserQueries.updateBasicProfile(userId, profile);
 
@@ -218,21 +237,30 @@ class UserService {
     return updatedUser;
   }
 
-  async updateProfile(userId, profile) {
+  // basic details
+  async getBasicDetails(userId) {
+    return await UserQueries.getBasicById(userId);
+  }
+
+  async updatePersonalDetailsProfile(userId, profile) {
     const [rows] = await getReadPool().execute(`SELECT id FROM user_profiles WHERE user_id = ?`, [userId]);
 
     if (!rows.length) {
       await UserQueries.createProfile(userId, profile);
     } else {
-      await UserQueries.updateProfile(userId, profile);
+      await UserQueries.updatePersonalDetails(userId, profile);
     }
 
     const updatedUser = await this.getProfile(userId);
     return updatedUser;
   }
 
-  //  -----------------------Education ---------------------------
+  // personal details
+  async getpersonalProfileDetails(userId) {
+    return await UserQueries.getPersonalDetailsById(userId);
+  }
 
+  //  -------------------------------------------------------------Education ---------------------------------------------------------------
   async addEducation(userId, education) {
     return await UserQueries.addEducation(userId, education);
   }

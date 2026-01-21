@@ -73,21 +73,49 @@ export const getProfileById = async (req, res) => {
 export const updateBasicDetails = async (req, res) => {
   try {
     const userId = req.user.id;
-    const updatedProfile = await UserService.updateBasicProfile(userId, req.body);
+    const payload = { ...req.body };
 
-    if (req.body.profile_title) {
-      await saveSearchKeyword(userId, req.body.profile_title);
+    if (req.file) {
+      const { url, public_id } =
+        await UserService.updateProfileImage(userId, req.file.path);
+
+      payload.profile_image_url = url;
+      payload.profile_image_public_id = public_id;
     }
-    res.json({ message: 'Basic Profile updated successfully', data: updatedProfile });
+
+    const updatedProfile =
+      await UserService.updateBasicProfile(userId, payload);
+
+    if (payload.profile_title) {
+      await saveSearchKeyword(userId, payload.profile_title);
+    }
+
+    res.json({
+      success: true,
+      message: 'Basic Profile updated successfully',
+      data: updatedProfile,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const updateProfile = async (req, res) => {
+
+export const getBasicDetails = async (req, res) => {
+  const userId = req.user.id;
+  console.log("userId", userId);
+
+  const user = await UserService.getBasicDetails(userId);
+  console.log("user", user);
+  
+  res.json({ success: true, data: user });
+};
+
+
+export const updateProfilePersonalDetails = async (req, res) => {
   try {
     const userId = req.user.id;
-    const updatedProfile = await UserService.updateProfile(userId, req.body);
+    const updatedProfile = await UserService.updatePersonalDetailsProfile(userId, req.body);
 
     if (req.body.profile_title) {
       await saveSearchKeyword(userId, req.body.profile_title);
@@ -96,6 +124,16 @@ export const updateProfile = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+export const getpersonalProfileDetails = async (req, res) => {
+  const userId = req.user.id;
+  console.log("userId", userId);
+
+  const user = await UserService.getpersonalProfileDetails(userId);
+  console.log("user", user);
+  
+  res.json({ success: true, data: user });
 };
 
 // =================== RESUME ===================
