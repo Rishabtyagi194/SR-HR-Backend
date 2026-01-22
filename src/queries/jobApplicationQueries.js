@@ -334,6 +334,7 @@ export const jobApplicationQueries = {
     cja.employer_org_id,
     cja.consultant_user_id,
     cja.job_category,
+    cja.resumes,
     cja.applied_at,
     cja.updated_at,
 

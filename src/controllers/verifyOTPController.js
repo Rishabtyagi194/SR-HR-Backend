@@ -10,7 +10,7 @@ const resolveUserTableByRole = (role) => {
   return 'users';
 };
 
-// POST /api/auth/verify-otp
+// POST /otp/verify-otp
 export const verifyOTP = async (req, res) => {
   const { email, otp, role } = req.body;
 
@@ -69,7 +69,7 @@ export const verifyOTP = async (req, res) => {
 };
 
 
-// POST /api/auth/resend-otp
+// POST /otp/resend-otp
 export const resendOTP = async (req, res) => {
   const { email, role } = req.body;
 
