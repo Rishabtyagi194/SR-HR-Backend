@@ -37,6 +37,7 @@ export const getConsultantUploadedJobs = async (consultantUserId) => {
     employer_org_id: row.employer_org_id,
     consultant_user_id: row.consultant_user_id,
     job_category: row.job_category,
+    resumes: row.resumes,
     job_title: row.job_category === 'HotVacancy'
       ? row.hotvacancy_title
       : row.internship_title,
