@@ -33,9 +33,9 @@ export const updateResumeStatus = async (
   resumeId,
   status
 ) => {
-  const pool = getWritePool(); // ✅ write pool
+  const pool = getWritePool(); 
 
-  // 1️⃣ Fetch resumes (EMPLOYER ownership)
+  //  Fetch resumes (EMPLOYER ownership)
   const [[row]] = await pool.query(
     `
     SELECT resumes
@@ -46,13 +46,13 @@ export const updateResumeStatus = async (
     [applicationId, employerUserId]
   );
 
-  console.log('row', row);
+  // console.log('row', row);
 
   if (!row || !Array.isArray(row.resumes)) return null;
 
   let updatedResume = null;
 
-  // 2️⃣ Update specific resume
+  //  Update specific resume
   const updatedResumes = row.resumes.map(resume => {
     if (resume.resume_id === resumeId) {
       updatedResume = {
@@ -67,7 +67,7 @@ export const updateResumeStatus = async (
 
   if (!updatedResume) return null;
 
-  // 3️⃣ Save back to DB
+  // Save back to DB
   await pool.query(
     `
     UPDATE consultant_job_applications

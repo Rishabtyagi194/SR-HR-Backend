@@ -19,4 +19,7 @@ router.patch(
   updateResumeStatusController
 );
 
+
+// router.get('/resume/success-rate', getAllConsultants);
+
 export default router;
