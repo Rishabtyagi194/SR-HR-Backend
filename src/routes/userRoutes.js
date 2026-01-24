@@ -13,7 +13,7 @@ router.post(
   '/register',
   [
     body('full_name').trim().notEmpty().withMessage('Full name required'),
-    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+    body('email').isEmail().withMessage('Valid email required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('phone').optional().isMobilePhone().withMessage('Invalid phone number'),
   ],
@@ -32,11 +32,16 @@ router.get('/profile', Authenticate, userController.getProfile);
 router.get('/profile/:id', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), userController.getProfileById);
 
 // Update Basic profile
-router.patch('/profile/update/basic', Authenticate, userController.updateBasicDetails);
+router.patch('/profile/update/basic', Authenticate, upload.single('profileImage'), userController.updateBasicDetails);
+
+// get basic profile
+router.get('/basic', Authenticate, userController.getBasicDetails);
 
 // Update Basic profile
-router.patch('/profile/update', Authenticate, userController.updateProfile);
+router.patch('/profile/personal-details/update', Authenticate, userController.updateProfilePersonalDetails);
 
+// get personal profile details
+router.get('/personal-details', Authenticate, userController.getpersonalProfileDetails);
 
 /* ----------------------------- Resume  ---------------------------- */
 
@@ -94,6 +99,40 @@ router.patch('/skills/update/:id', Authenticate, userController.updateSkill);
 
 // Delete a specific skill
 router.delete('/skills/delete/:id', Authenticate, userController.deleteSkill);
+
+/* -------------------------- PROJECTS -------------------------- */
+
+// Add project(s)
+router.post('/projects', Authenticate, userController.addProject);
+
+// Get all projects
+router.get('/projects', Authenticate, userController.getProjects);
+
+// Update project
+router.patch('/projects/update/:id', Authenticate, userController.updateProject);
+
+// Delete project
+router.delete('/projects/delete/:id', Authenticate, userController.deleteProject);
+
+/* ---------------------- ACCOMPLISHMENTS ---------------------- */
+
+// social profiles
+router.post('/social-profiles', Authenticate, userController.addSocialProfile);
+router.get('/social-profiles', Authenticate, userController.getSocialProfiles);
+router.patch('/social-profiles/update/:id', Authenticate, userController.updateSocialProfile);
+router.delete('/social-profiles/delete/:id', Authenticate, userController.deleteSocialProfile);
+
+// work samples
+router.post('/work-samples', Authenticate, userController.addWorkSample);
+router.get('/work-samples', Authenticate, userController.getWorkSamples);
+router.patch('/work-samples/update/:id', Authenticate, userController.updateWorkSample);
+router.delete('/work-samples/delete/:id', Authenticate, userController.deleteWorkSample);
+
+// certifications
+router.post('/certifications', Authenticate, userController.addCertification);
+router.get('/certifications', Authenticate, userController.getCertifications);
+router.patch('/certifications/update/:id', Authenticate, userController.updateCertification);
+router.delete('/certifications/delete/:id', Authenticate, userController.deleteCertification);
 
 /* ----------------------------- ACCOUNT MANAGEMENT ----------------------------- */
 

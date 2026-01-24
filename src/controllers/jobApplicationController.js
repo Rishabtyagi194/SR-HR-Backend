@@ -1,8 +1,10 @@
-import { getReadPool } from '../config/database.js';
+import { getWritePool } from '../config/database.js';
 import jobApplicationService from '../services/jobApplicationService.js';
 import { getFileHash, uploadConsultantResume } from '../utils/cloudinary/consultantResumeUploader.js';
 
-// Apply on a particular job
+// ----------------------------------------- User ------------------------------------------
+
+// Apply on a particular job by user
 export const applyForJobController = async (req, res) => {
   const { jobId, category } = req.params; // read category here
   const user = req.user;
@@ -132,6 +134,7 @@ export const getUserAllAppliedJobs = async (req, res) => {
     });
   }
 };
+
 // ----------------------------------------- consultant ------------------------------------------
 // consultant uploads resume on a particular job
 // export const uploadResumeOnJobController = async (req, res) => {
@@ -220,7 +223,6 @@ export const getUserAllAppliedJobs = async (req, res) => {
 //     rejected,
 //   });
 // };
-
 
 // export const uploadResumeOnJobController = async (req, res) => {
 //   const { jobId, category: rawCategory } = req.params;
@@ -313,19 +315,14 @@ export const getUserAllAppliedJobs = async (req, res) => {
 //   });
 // };
 
-
-
+// apply by consultant on employer job (upload resume)
 export const uploadResumeOnJobController = async (req, res) => {
   const { jobId, category: rawCategory } = req.params;
   const user = req.user;
+  
 
   // Normalize category
-  const category =
-    rawCategory === 'HotVacancy'
-      ? 'HotVacancy'
-      : rawCategory === 'Internship'
-      ? 'Internship'
-      : null;
+  const category = rawCategory === 'HotVacancy' ? 'HotVacancy' : rawCategory === 'Internship' ? 'Internship' : null;
 
   if (!category) {
     return res.status(400).json({ message: 'Invalid job category' });
@@ -340,11 +337,13 @@ export const uploadResumeOnJobController = async (req, res) => {
 
   for (const file of req.files) {
     try {
+      const originalFileName = file.originalname;
+
       const hash = getFileHash(file.path);
       const publicId = `consultant_resumes/${hash}`;
 
-      // ✅ ALWAYS check duplicate per file (NO cached flag)
-      const [[duplicate]] = await getReadPool().execute(
+      // ALWAYS check duplicate per file (NO cached flag)
+      const [[duplicate]] = await getWritePool().execute(
         `
         SELECT 1
         FROM consultant_job_applications
@@ -353,7 +352,7 @@ export const uploadResumeOnJobController = async (req, res) => {
           AND job_ref_id = ?
           AND JSON_SEARCH(resumes, 'one', ?, NULL, '$[*].public_id') IS NOT NULL
         `,
-        [user.id, category, jobId, publicId]
+        [user.id, category, jobId, publicId],
       );
 
       if (duplicate) {
@@ -364,16 +363,27 @@ export const uploadResumeOnJobController = async (req, res) => {
       // Upload to Cloudinary
       const uploadResult = await uploadConsultantResume(file.path, hash);
 
+      // console.log('uploadResult', uploadResult);
+
       // Insert / append resume
-      const resume = await jobApplicationService.uploadResume({
+      const { inserted, resume } = await jobApplicationService.uploadResume({
         user,
         jobId,
         category,
+        originalFileName,
         resumeUrl: uploadResult.secure_url,
         resumePublicId: uploadResult.public_id,
       });
 
-      uploaded.push(resume);
+      console.log("inserted", inserted);
+      // console.log("resume", resume);
+      
+
+      if (inserted) {
+        uploaded.push(resume);
+      } else {
+        rejected.push(file.originalname);
+      }
     } catch (err) {
       console.error('Resume upload failed:', err);
       rejected.push(file.originalname);

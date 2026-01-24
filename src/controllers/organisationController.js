@@ -3,6 +3,8 @@ import organisationService from '../services/organisationService.js';
 export const registerOrganisationAndEmployers = async (req, res) => {
   try {
     const { organisationData, userData } = req.body;
+    //  console.log('HEADERS:', req.headers['content-type']);
+    // console.log('BODY:', req.body);
 
     const result = await organisationService.registerOrganisationAndEmployer(organisationData, userData);
 

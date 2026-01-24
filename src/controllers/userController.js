@@ -73,22 +73,49 @@ export const getProfileById = async (req, res) => {
 export const updateBasicDetails = async (req, res) => {
   try {
     const userId = req.user.id;
-    const updatedProfile = await UserService.updateBasicProfile(userId, req.body);
+    const payload = { ...req.body };
 
-    if (req.body.profile_title) {
-      await saveSearchKeyword(userId, req.body.profile_title);
+    if (req.file) {
+      const { url, public_id } =
+        await UserService.updateProfileImage(userId, req.file.path);
+
+      payload.profile_image_url = url;
+      payload.profile_image_public_id = public_id;
     }
-    res.json({ message: 'Basic Profile updated successfully', data: updatedProfile });
+
+    const updatedProfile =
+      await UserService.updateBasicProfile(userId, payload);
+
+    if (payload.profile_title) {
+      await saveSearchKeyword(userId, payload.profile_title);
+    }
+
+    res.json({
+      success: true,
+      message: 'Basic Profile updated successfully',
+      data: updatedProfile,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
 
-export const updateProfile = async (req, res) => {
+export const getBasicDetails = async (req, res) => {
+  const userId = req.user.id;
+  console.log("userId", userId);
+
+  const user = await UserService.getBasicDetails(userId);
+  console.log("user", user);
+  
+  res.json({ success: true, data: user });
+};
+
+
+export const updateProfilePersonalDetails = async (req, res) => {
   try {
     const userId = req.user.id;
-    const updatedProfile = await UserService.updateProfile(userId, req.body);
+    const updatedProfile = await UserService.updatePersonalDetailsProfile(userId, req.body);
 
     if (req.body.profile_title) {
       await saveSearchKeyword(userId, req.body.profile_title);
@@ -97,6 +124,16 @@ export const updateProfile = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+export const getpersonalProfileDetails = async (req, res) => {
+  const userId = req.user.id;
+  console.log("userId", userId);
+
+  const user = await UserService.getpersonalProfileDetails(userId);
+  console.log("user", user);
+  
+  res.json({ success: true, data: user });
 };
 
 // =================== RESUME ===================
@@ -115,7 +152,6 @@ export const updateProfile = async (req, res) => {
 
 //     const oldPublicId = user?.[0]?.resume_public_id;
 
-  
 //     //  Upload new resume to Cloudinary
 //     const uploadResult = await uploadUserResume(localFilePath, req.user.id);
 
@@ -129,7 +165,6 @@ export const updateProfile = async (req, res) => {
 
 //     //  Update DB
 //     const result = await UserService.uploadResume(userId, resumeUrl, resumePublicId);
-
 
 //       //  Delete old resume from Cloudinary if exists
 //     if (oldPublicId) {
@@ -150,16 +185,15 @@ export const uploadResume = async (req, res) => {
   try {
     const userId = req.user.id;
     const localFilePath = req.file?.path;
+    const originalFileName = req.file?.originalname;
+    // console.log("localFilePath", req.file?.originalname);
 
     if (!localFilePath) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
     // Fetch old resume public_id (if any)
-    const [[profile]] = await getReadPool().execute(
-      `SELECT resume_public_id FROM user_profiles WHERE user_id = ?`,
-      [userId]
-    );
+    const [[profile]] = await getReadPool().execute(`SELECT resume_public_id FROM user_profiles WHERE user_id = ?`, [userId]);
 
     const oldPublicId = profile?.resume_public_id || null;
 
@@ -170,7 +204,7 @@ export const uploadResume = async (req, res) => {
     const resumePublicId = uploadResult.public_id;
 
     // Update DB
-    await UserService.uploadResume(userId, resumeUrl, resumePublicId);
+    await UserService.uploadResume(userId, originalFileName, resumeUrl, resumePublicId);
 
     // Delete old resume AFTER success
     if (oldPublicId) {
@@ -181,6 +215,7 @@ export const uploadResume = async (req, res) => {
       message: 'Resume updated successfully',
       data: {
         user_id: userId,
+        title: originalFileName,
         resume_url: resumeUrl,
       },
     });
@@ -188,28 +223,24 @@ export const uploadResume = async (req, res) => {
     console.error('Error in uploadResume:', error);
     return res.status(500).json({ message: error.message });
   }
-}; 
+};
 
 export const getResume = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Fetch old resume 
-    const [[resume]] = await getReadPool().execute(
-      `SELECT resume_url FROM user_profiles WHERE user_id = ?`,
-      [userId]
-    );
+    // Fetch old resume
+    const [[resume]] = await getReadPool().execute(`SELECT resume_title, resume_url FROM user_profiles WHERE user_id = ?`, [userId]);
 
     return res.status(200).json({
       message: 'Resume get successfully',
-      resume
+      resume,
     });
   } catch (error) {
     console.error('Error in uploadResume:', error);
     return res.status(500).json({ message: error.message });
   }
-}; 
-
+};
 
 // =================== EDUCATION ===================
 export const addEducation = async (req, res) => {
@@ -342,6 +373,117 @@ export const deleteSkill = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+/* -------------------------- PROJECTS -------------------------- */
+
+export const addProject = async (req, res) => {
+  try {
+    await UserService.addProject(req.user.id, req.body);
+    res.status(201).json({ message: 'Project added successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getProjects = async (req, res) => {
+  try {
+    const projects = await UserService.listProjects(req.user.id);
+    res.json({
+      message: 'Projects fetched successfully',
+      total: projects.length,
+      data: projects,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateProject = async (req, res) => {
+  try {
+    await UserService.updateProject(req.user.id, req.params.id, req.body);
+    res.json({ message: 'Project updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteProject = async (req, res) => {
+  try {
+    await UserService.deleteProject(req.user.id, req.params.id);
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ---------------------- ACCOMPLISHMENTS ---------------------- */
+
+/* -------- SOCIAL PROFILES -------- */
+
+export const addSocialProfile = async (req, res) => {
+  await UserService.addSocialProfile(req.user.id, req.body);
+  res.status(201).json({ message: 'Social profile added' });
+};
+
+export const getSocialProfiles = async (req, res) => {
+  const data = await UserService.listSocialProfiles(req.user.id);
+  res.json({ total: data.length, data });
+};
+
+export const updateSocialProfile = async (req, res) => {
+  await UserService.updateSocialProfile(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Social profile updated' });
+};
+
+export const deleteSocialProfile = async (req, res) => {
+  await UserService.deleteSocialProfile(req.user.id, req.params.id);
+  res.json({ message: 'Social profile deleted' });
+};
+
+/* -------- WORK SAMPLES -------- */
+
+export const addWorkSample = async (req, res) => {
+  await UserService.addWorkSample(req.user.id, req.body);
+  res.status(201).json({ message: 'Work sample added' });
+};
+
+export const getWorkSamples = async (req, res) => {
+  const data = await UserService.listWorkSamples(req.user.id);
+  res.json({ total: data.length, data });
+};
+
+export const updateWorkSample = async (req, res) => {
+  await UserService.updateWorkSample(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Work sample updated' });
+};
+
+export const deleteWorkSample = async (req, res) => {
+  await UserService.deleteWorkSample(req.user.id, req.params.id);
+  res.json({ message: 'Work sample deleted' });
+};
+
+/* -------- CERTIFICATIONS -------- */
+
+export const addCertification = async (req, res) => {
+  await UserService.addCertification(req.user.id, req.body);
+  res.status(201).json({ message: 'Certification added' });
+};
+
+export const getCertifications = async (req, res) => {
+  const data = await UserService.listCertifications(req.user.id);
+  res.json({ total: data.length, data });
+};
+
+export const updateCertification = async (req, res) => {
+  await UserService.updateCertification(req.user.id, req.params.id, req.body);
+  res.json({ message: 'Certification updated' });
+};
+
+export const deleteCertification = async (req, res) => {
+  await UserService.deleteCertification(req.user.id, req.params.id);
+  res.json({ message: 'Certification deleted' });
+};
+
 
 // ***********************************************************************************************
 

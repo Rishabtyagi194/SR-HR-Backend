@@ -29,18 +29,28 @@ export const jobApplicationQueries = {
       ja.user_id,
       ja.application_status,
       ja.applied_at,
+      
       u.full_name,
       u.email,
       u.phone,
+      up.gender,
+      u.work_status,
+      u.total_experience_years,
+      u.total_experience_months,
+      u.availability_to_join,
+
+      up.marital_status,
+      up.dob,
+      up.permanent_address,
+      up.hometown,
+      up.pincode,
+
       up.profile_title,
-      up.about_me,
-      up.current_location,
-      up.preferred_location,
-      up.total_experience_years,
-      up.total_experience_months,
-      up.expected_salary,
-      up.notice_period,
+      up.resume_headline,
+      up.profile_summary,
+      up.disability_status,
       up.resume_url
+      
     FROM job_applications ja
     JOIN users u ON ja.user_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
@@ -55,18 +65,28 @@ export const jobApplicationQueries = {
       ja.user_id,
       ja.application_status,
       ja.applied_at,
+      
       u.full_name,
       u.email,
       u.phone,
+      up.gender,
+      u.work_status,
+      u.total_experience_years,
+      u.total_experience_months,
+      u.availability_to_join,
+
+      up.marital_status,
+      up.dob,
+      up.permanent_address,
+      up.hometown,
+      up.pincode,
+
       up.profile_title,
-      up.about_me,
-      up.current_location,
-      up.preferred_location,
-      up.total_experience_years,
-      up.total_experience_months,
-      up.expected_salary,
-      up.notice_period,
+      up.resume_headline,
+      up.profile_summary,
+      up.disability_status,
       up.resume_url
+
     FROM job_applications ja
     JOIN users u ON ja.user_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
@@ -82,22 +102,25 @@ export const jobApplicationQueries = {
       ja.application_status,
       ja.applied_at,
       ja.organisation_id,
+      
       u.full_name,
       u.email,
       u.phone,
-      up.gender,
-      up.address,
-      up.city,
-      up.state,
-      up.country,
+      u.work_status,
+      u.total_experience_years,
+      u.total_experience_months,
+      u.availability_to_join,
+      
+      up.marital_status,
+      up.dob,
+      up.permanent_address,
+      up.hometown,
+      up.pincode,
+
       up.profile_title,
-      up.about_me,
-      up.current_location,
-      up.preferred_location,
-      up.total_experience_years,
-      up.total_experience_months,
-      up.notice_period,
-      up.expected_salary,
+      up.resume_headline,
+      up.profile_summary,
+      up.disability_status,
       up.resume_url,
       
       -- Hot Vacancy Job fields
@@ -133,7 +156,7 @@ export const jobApplicationQueries = {
     WHERE application_id = ?
   `,
 
-// get all applied application for users
+  // get all applied application for users
   getUserAllAppliedJobs: `
   SELECT 
     ja.id AS application_id,
@@ -219,14 +242,14 @@ export const jobApplicationQueries = {
   WHERE job_id = ?
 `,
 
-//  Fetch user's education, experience, and skills
+  //  Fetch user's education, experience, skills, projects and accomplistments (social profile, sample work, certification)
   getUserEducations: `
-    SELECT degree, specialization, institute_name, start_year, end_year, percentage
+    SELECT degree, institute_name, specialization, course_type, start_year, end_year, percentage
     FROM user_education WHERE user_id = ?
   `,
 
   getUserExperiences: `
-    SELECT company_name, job_title, start_date, end_date, currently_working, description
+    SELECT is_current_employment, employment_type, company_name, job_title, job_profile, start_date, end_date
     FROM user_experience WHERE user_id = ?
   `,
 
@@ -234,8 +257,34 @@ export const jobApplicationQueries = {
     SELECT skill_name, proficiency_level
     FROM user_skills WHERE user_id = ?
   `,
+  
+  // projects
+  getUserProjects: `
+    SELECT project_title, project_details, project_status, work_from_year,
+    work_from_month, work_to_year, work_to_month
+    FROM user_projects WHERE user_id = ?
+  `,
 
-// ------------------------------ consultant ------------------------------------
+  // social profile
+  getUsersocialProfile: `
+    SELECT social_profile, social_profile_url, social_profile_description 
+    FROM user_social_profiles WHERE user_id = ?
+  `,
+
+  // sample work
+  getUserWorkSample: `
+    SELECT work_sample_title, work_sample_url, work_sample_description, 
+    work_from_year, work_from_month, work_to_year, work_to_month
+    FROM user_work_samples WHERE user_id = ?
+  `,
+
+  // certification
+  getUserCertification: `
+    SELECT certification_name, certification_completion_id, certification_url
+    FROM user_certifications WHERE user_id = ?
+  `,
+
+  // ------------------------------ consultant ------------------------------------
 
   getConsultantApplicationsByHotVacancyJobId: `
   SELECT
@@ -277,14 +326,15 @@ export const jobApplicationQueries = {
   ORDER BY cja.applied_at DESC
 `,
 
-// see applied jobs by consultant
-getConsultantUploadedJobs: `
+  // see applied jobs by consultant
+  getConsultantUploadedJobs: `
   SELECT
     cja.id AS application_id,
     cja.job_ref_id,
     cja.employer_org_id,
     cja.consultant_user_id,
     cja.job_category,
+    cja.resumes,
     cja.applied_at,
     cja.updated_at,
 
@@ -316,9 +366,9 @@ getConsultantUploadedJobs: `
 
   WHERE cja.consultant_user_id = ?
   ORDER BY cja.applied_at DESC
-`, 
+`,
 
-getHotVacancyJobByJobIdAndOrgId: `
+  getHotVacancyJobByJobIdAndOrgId: `
     SELECT
       job_id,
       organisation_id,
@@ -360,8 +410,7 @@ getHotVacancyJobByJobIdAndOrgId: `
     WHERE job_id = ?
       AND organisation_id = ?
     LIMIT 1
-  ` 
-
+  `,
 };
 
 // export const jobApplicationQueries = {

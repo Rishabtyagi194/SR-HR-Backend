@@ -372,8 +372,12 @@ class jobQueries {
       const [educations] = await getReadPool().query(jobApplicationQueries.getUserEducations, [app.user_id]);
       const [experiences] = await getReadPool().query(jobApplicationQueries.getUserExperiences, [app.user_id]);
       const [skills] = await getReadPool().query(jobApplicationQueries.getUserSkills, [app.user_id]);
+      const [projects] = await getReadPool().query(jobApplicationQueries.getUserProjects, [app.user_id]);
+      const [social_profile] = await getReadPool().query(jobApplicationQueries.getUsersocialProfile, [app.user_id]);
+      const [work_sample] = await getReadPool().query(jobApplicationQueries.getUserWorkSample, [app.user_id]);
+      const [certification] = await getReadPool().query(jobApplicationQueries.getUserCertification, [app.user_id]);
 
-      app.profile = { educations, experiences, skills };
+      app.profile = { educations, experiences, skills, projects, social_profile, work_sample, certification };
     }
 
     // CONSULTANT applications

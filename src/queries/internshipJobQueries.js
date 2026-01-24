@@ -81,9 +81,9 @@ class internshipQueries {
   //   if (companyId) {
   //     // Dashboard → only jobs for that organization
   //     [rows] = await getReadPool().query(
-  //       `SELECT * FROM InternshipJobs 
-  //       WHERE organisation_id = ? 
-  //       ORDER BY created_at DESC 
+  //       `SELECT * FROM InternshipJobs
+  //       WHERE organisation_id = ?
+  //       ORDER BY created_at DESC
   //       LIMIT ? OFFSET ?`,
   //       [companyId, limit, offset],
   //     );
@@ -97,15 +97,15 @@ class internshipQueries {
   //   } else {
   //     // Client side all jobs
   //     [rows] = await getReadPool().query(
-  //       `SELECT * FROM InternshipJobs 
+  //       `SELECT * FROM InternshipJobs
   //       WHERE LOWER(Status) = 'active'
-  //       ORDER BY created_at DESC 
+  //       ORDER BY created_at DESC
   //       LIMIT ? OFFSET ?`,
   //       [limit, offset],
   //     );
 
   //     [[{ total }]] = await getReadPool().execute(`
-  //       SELECT COUNT(*) as total 
+  //       SELECT COUNT(*) as total
   //       FROM InternshipJobs
   //       WHERE Status = 'active'
   //       `);
@@ -204,7 +204,6 @@ class internshipQueries {
     return { jobs: rows, total };
   }
 
-
   async getInternshipWithApplications(jobId, companyId = null) {
     // fetch job
     const [internshipRows] = companyId
@@ -229,11 +228,15 @@ class internshipQueries {
       const [educations] = await getReadPool().query(jobApplicationQueries.getUserEducations, [app.user_id]);
       const [experiences] = await getReadPool().query(jobApplicationQueries.getUserExperiences, [app.user_id]);
       const [skills] = await getReadPool().query(jobApplicationQueries.getUserSkills, [app.user_id]);
+      const [projects] = await getReadPool().query(jobApplicationQueries.getUserProjects, [app.user_id]);
+      const [social_profile] = await getReadPool().query(jobApplicationQueries.getUsersocialProfile, [app.user_id]);
+      const [work_sample] = await getReadPool().query(jobApplicationQueries.getUserWorkSample, [app.user_id]);
+      const [certification] = await getReadPool().query(jobApplicationQueries.getUserCertification, [app.user_id]);
 
-      app.profile = { educations, experiences, skills };
+      app.profile = { educations, experiences, skills, projects, social_profile, work_sample, certification };
     }
 
-  // CONSULTANT applications
+    // CONSULTANT applications
     const [consultantApplications] = await getReadPool().query(jobApplicationQueries.getConsultantApplicationsByInternshipJobId, [
       jobId,
       job.organisation_id,
@@ -252,7 +255,6 @@ class internshipQueries {
     job.total_user_applications = applications.length;
     job.total_consultant_applications = parsedConsultantApplications.length;
     job.total_applications = applications.length + parsedConsultantApplications.length;
-
 
     return job;
   }

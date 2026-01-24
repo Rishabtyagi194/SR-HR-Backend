@@ -346,6 +346,8 @@ export const initializeDatabase = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
+        profile_image_url VARCHAR(500),
+        profile_image_public_id VARCHAR(255),
 
         role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
 
@@ -380,27 +382,6 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    //  await connection.execute(`
-    //   CREATE TABLE IF NOT EXISTS users (
-    //     id INT AUTO_INCREMENT PRIMARY KEY,
-    //     full_name VARCHAR(255) NOT NULL,
-    //     email VARCHAR(255) UNIQUE NOT NULL,
-    //     password VARCHAR(255) NOT NULL,
-    //     phone VARCHAR(20) UNIQUE,
-    //     role ENUM('job_seeker', 'admin') DEFAULT 'job_seeker',
-    //     email_otp VARCHAR(10),
-    //     is_mobile_verified BOOLEAN DEFAULT FALSE,
-    //     is_email_verified BOOLEAN DEFAULT FALSE,
-    //     otp_expires_at DATETIME,
-    //     is_active BOOLEAN DEFAULT FALSE,
-    //     last_login TIMESTAMP NULL,
-    //     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    //     INDEX idx_email (email),
-    //     INDEX idx_phone (phone)
-    //   )
-    // `);
-
     // user profile
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS user_profiles (
@@ -433,6 +414,7 @@ export const initializeDatabase = async () => {
         notice_period VARCHAR(50),
         expected_salary VARCHAR(50),
 
+        resume_title VARCHAR(500),
         resume_url VARCHAR(500),
         resume_public_id VARCHAR(255),
        
@@ -442,37 +424,6 @@ export const initializeDatabase = async () => {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
-
-    //  await connection.execute(`
-    //   CREATE TABLE IF NOT EXISTS user_profiles (
-    //     id INT AUTO_INCREMENT PRIMARY KEY,
-    //     user_id INT NOT NULL,
-    //     dob DATE DEFAULT NULL,
-    //     gender ENUM('male', 'female', 'other') DEFAULT NULL,
-    //     address VARCHAR(255) DEFAULT NULL,
-    //     city VARCHAR(255) DEFAULT NULL,
-    //     state VARCHAR(255) DEFAULT NULL,
-    //     country VARCHAR(255) DEFAULT NULL,
-    //     pincode VARCHAR(20) DEFAULT NULL,
-    //     profile_completion INT DEFAULT 0,
-    //     profile_title VARCHAR(255),
-    //     about_me TEXT,
-    //     is_pwd BOOLEAN DEFAULT FALSE,
-    //     current_location VARCHAR(255),
-    //     preferred_location VARCHAR(255),
-    //     willingToRelocate BOOLEAN DEFAULT FALSE,
-    //     total_experience_years INT DEFAULT 0,
-    //     total_experience_months INT DEFAULT 0,
-    //     notice_period VARCHAR(50),
-    //     current_salary VARCHAR(50),
-    //     expected_salary VARCHAR(50),
-    //     resume_url VARCHAR(500),
-    //     resume_public_id VARCHAR(255),
-    //     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    //     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    //   )
-    // `);
 
     // users educations
     await connection.execute(`
@@ -576,39 +527,64 @@ export const initializeDatabase = async () => {
         INDEX idx_user_id (user_id)
       )
     `);
-    
-    // users Accomplishments
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS user_accomplishments (
+
+     await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_social_profiles (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
 
-        -- Social / Online profile
-        social_profile VARCHAR(255),
+        social_profile VARCHAR(255) NOT NULL,
         social_profile_url VARCHAR(255),
         social_profile_description VARCHAR(255),
 
-        -- Work sample
-        work_sample_title VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id)
+      );
+    `);
+
+
+     await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_work_samples (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+
+        work_sample_title VARCHAR(255) NOT NULL,
         work_sample_url VARCHAR(255),
         work_sample_description TEXT,
-        
-        work_sample_from_year VARCHAR(255),
-        work_sample_from_month VARCHAR(255),
-        work_sample_to_year VARCHAR(255),
-        work_sample_to_month VARCHAR(255),
+
+        work_from_year VARCHAR(4),
+        work_from_month VARCHAR(20),
+        work_to_year VARCHAR(4),
+        work_to_month VARCHAR(20),
+
         currently_working BOOLEAN DEFAULT FALSE,
 
-        -- Certification
-        certification_name VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id)
+      );
+    `);
+    
+    // users Accomplishments
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_certifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+
+        certification_name VARCHAR(255) NOT NULL,
         certification_completion_id VARCHAR(255),
         certification_url VARCHAR(255),
-        
-        validity_from_month VARCHAR(255),
-        validity_from_year VARCHAR(255),
-        validity_to_month VARCHAR(255),
-        validity_to_year VARCHAR(255),
-        
+
+        validity_from_month VARCHAR(20),
+        validity_from_year VARCHAR(4),
+        validity_to_month VARCHAR(20),
+        validity_to_year VARCHAR(4),
+
         certificate_does_not_expire BOOLEAN DEFAULT FALSE,
 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -616,7 +592,7 @@ export const initializeDatabase = async () => {
 
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id)
-      )
+      );
     `);
     
     // JObs applications/response
@@ -854,7 +830,21 @@ export const initializeDatabase = async () => {
         job_ref_id
       )
       );
+    `);
 
+     await connection.execute(`
+      CREATE TABLE IF NOT EXISTS contactusLeads (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        mobile_no VARCHAR(255),
+        area_of_concern VARCHAR(50),
+        message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_name (name),
+        INDEX idx_email (email)
+      );
     `);
 
 
