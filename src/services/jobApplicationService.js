@@ -268,7 +268,7 @@ export const uploadResume = async ({ user, jobId , category, originalFileName, r
       JSON.stringify(resumeObj),
     ],
   );
-  console.log('result', result);
+  // console.log('result', result);
 
 const inserted =
   result.affectedRows === 1 || result.changedRows === 1;
