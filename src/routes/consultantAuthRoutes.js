@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllConsultants, loginConsultant, registerAgency } from '../controllers/consultantAuthController.js';
-import { updateResumeStatusController } from '../controllers/consultantApplicationController.js';
+import { getSuccessRateForConsultants, updateResumeStatusController } from '../controllers/consultantApplicationController.js';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -20,6 +20,6 @@ router.patch(
 );
 
 
-// router.get('/resume/success-rate', getAllConsultants);
+router.get('/resume/success-rate', Authenticate, getSuccessRateForConsultants);
 
 export default router;
