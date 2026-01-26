@@ -1,4 +1,4 @@
-import { getReadPool, getWritePool } from "../config/database.js";
+import { getReadPool, getWritePool } from '../config/database.js';
 
 export const getApplicationsByEmployerOrg = (limit, offset) => `
   SELECT
@@ -25,15 +25,9 @@ export const countApplicationsByEmployerOrg = `
   WHERE employer_org_id = ?
 `;
 
-
 // update the status of the resume by employer, uploaded by consultant
-export const updateResumeStatus = async (
-  employerUserId,
-  applicationId,
-  resumeId,
-  status
-) => {
-  const pool = getWritePool(); 
+export const updateResumeStatus = async (employerUserId, applicationId, resumeId, status) => {
+  const pool = getWritePool();
 
   //  Fetch resumes (EMPLOYER ownership)
   const [[row]] = await pool.query(
@@ -43,7 +37,7 @@ export const updateResumeStatus = async (
     WHERE id = ?
       AND employer_user_id = ?
     `,
-    [applicationId, employerUserId]
+    [applicationId, employerUserId],
   );
 
   // console.log('row', row);
@@ -53,12 +47,12 @@ export const updateResumeStatus = async (
   let updatedResume = null;
 
   //  Update specific resume
-  const updatedResumes = row.resumes.map(resume => {
+  const updatedResumes = row.resumes.map((resume) => {
     if (resume.resume_id === resumeId) {
       updatedResume = {
         ...resume,
         status,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
       return updatedResume;
     }
@@ -75,9 +69,41 @@ export const updateResumeStatus = async (
     WHERE id = ?
       AND employer_user_id = ?
     `,
-    [JSON.stringify(updatedResumes), applicationId, employerUserId]
+    [JSON.stringify(updatedResumes), applicationId, employerUserId],
   );
 
   return updatedResume;
 };
 
+export const getSuccessRateResult = async (employerUserId) => {
+  
+  const [rows] = await getReadPool().execute(
+    `
+    SELECT resumes FROM consultant_job_applications 
+    WHERE consultant_user_id = ?
+    `,
+    [employerUserId],
+  );
+  // console.log(rows);
+
+  let totalResumes = 0;
+  let shortlistedResumes = 0;
+
+  for (const application of rows) {
+    if (!Array.isArray(application.resumes)) continue;
+
+    totalResumes += application.resumes.length;
+
+    shortlistedResumes += application.resumes.filter(
+      (resume) => resume.status === 'shortlisted'
+    ).length
+  }
+
+  const successRate = totalResumes === 0 ? 0 : Number(((shortlistedResumes / totalResumes) * 100).toFixed(2));
+
+  return {
+    totalResumes,
+    shortlistedResumes, 
+    successRate
+  }
+};
