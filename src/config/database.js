@@ -345,6 +345,8 @@ export const initializeDatabase = async () => {
         full_name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
+        auth_provider ENUM('local', 'google') DEFAULT 'local',
+        google_id VARCHAR(255) UNIQUE NULL,
         phone VARCHAR(20) UNIQUE,
         profile_image_url VARCHAR(500),
         profile_image_public_id VARCHAR(255),

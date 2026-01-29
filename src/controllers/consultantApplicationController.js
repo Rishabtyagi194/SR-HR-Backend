@@ -1,5 +1,5 @@
 import { ALLOWED_RESUME_STATUSES } from '../constants/resumeStatus.js';
-import { updateResumeStatus } from '../queries/consultantApplicationQueries.js';
+import { getSuccessRateResult, updateResumeStatus } from '../queries/consultantApplicationQueries.js';
 import {
   getConsultantUploadedJobs,
   getJobByJobIdAndOrgId,
@@ -83,16 +83,14 @@ export const getJobByJobIdAndOrgIdController = async (req, res) => {
   }
 };
 
-
-
 // update the status of resume by employer
 export const updateResumeStatusController = async (req, res) => {
   try {
     const employerUserId = req.user.id;
     const { application_id, resume_id, status } = req.body;
 
-    console.log("application_id, resume_id, status", application_id, resume_id, status);
-     
+    // console.log("application_id, resume_id, status", application_id, resume_id, status);
+
     if (!application_id || !resume_id || !status) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
@@ -100,19 +98,13 @@ export const updateResumeStatusController = async (req, res) => {
     if (!ALLOWED_RESUME_STATUSES.includes(status)) {
       return res.status(400).json({
         message: 'Invalid status value',
-        allowed: ALLOWED_RESUME_STATUSES
+        allowed: ALLOWED_RESUME_STATUSES,
       });
     }
 
-    const updatedResume = await updateResumeStatus(
-      employerUserId,
-      application_id,
-      resume_id,
-      status
-    );
+    const updatedResume = await updateResumeStatus(employerUserId, application_id, resume_id, status);
 
-    console.log("updatedResume", updatedResume);
-    
+    // console.log("updatedResume", updatedResume);
 
     if (!updatedResume) {
       return res.status(404).json({ message: 'Resume not found' });
@@ -120,15 +112,31 @@ export const updateResumeStatusController = async (req, res) => {
 
     res.json({
       message: 'Resume status updated successfully',
-      resume: updatedResume
+      resume: updatedResume,
     });
   } catch (error) {
     console.error('Update resume status error:', error);
     res.status(500).json({
       message: 'Server error',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
+export const getSuccessRateForConsultants = async (req, res) => {
+  try {
+    const employerUserId = req.user.id;
 
+    const result = await getSuccessRateResult(employerUserId);
+    res.json({
+      message: 'Resume success rate',
+      successRate: result,
+    });
+  } catch (error) {
+    console.error('Get success rate error:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};

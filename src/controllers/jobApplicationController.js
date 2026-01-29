@@ -375,7 +375,7 @@ export const uploadResumeOnJobController = async (req, res) => {
         resumePublicId: uploadResult.public_id,
       });
 
-      console.log("inserted", inserted);
+      // console.log("inserted", inserted);
       // console.log("resume", resume);
       
 
