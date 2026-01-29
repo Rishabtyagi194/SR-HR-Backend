@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import passport from 'passport';
+import './config/passport.js';
 
 // Import routes
 import adminRoutes from './routes/superAdminRoutes.js';
@@ -39,21 +41,28 @@ app.get('/', (req, res) => {
   res.json('API is running');
 });
 
+app.use(passport.initialize());
+
 // Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
 app.use('/api/organization', organizationRoutes);
+
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/jobs/applications', jobApplication);
 app.use('/api/jobs', hotVacancyJobsRoutes);
+
 app.use('/api/internship', internshipJobsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/resume', uploadResume);
+
 app.use('/otp', otpRoutes);
 app.use('/api/excel', uploadExcel);
 app.use('/api/search', searchRoutes);
+
 app.use('/api/savejob', saveJobsRoutes);
 app.use('/api/location', LocationRoutes);
+
 app.use('/api/consultant', consultantRoutes);
 app.use('/api/contcat-us', contactUsRoutes);
 
