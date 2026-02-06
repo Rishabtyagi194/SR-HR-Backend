@@ -7,7 +7,7 @@ import './config/passport.js';
 // Import routes
 import adminRoutes from './routes/superAdminRoutes.js';
 // import authRoutes from './routes/authRoutes.js';
-import organizationRoutes from './routes/organizationRoutes.js'
+import organizationRoutes from './routes/organizationRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
 import hotVacancyJobsRoutes from './routes/hotVacancyJobsRoutes.js';
@@ -19,16 +19,42 @@ import otpRoutes from './routes/otpVerificationRoutes.js';
 import uploadResume from './routes/resumeRoutes.js';
 import searchRoutes from './routes/searchFilterRoutes.js';
 import saveJobsRoutes from './routes/savedJobRoutes.js';
-import LocationRoutes from './routes/locationRoutes.js'
-import consultantRoutes from './routes/consultantAuthRoutes.js'
-import contactUsRoutes from './routes/contactUsRoutes.js'
+import LocationRoutes from './routes/locationRoutes.js';
+import consultantRoutes from './routes/consultantAuthRoutes.js';
+import contactUsRoutes from './routes/contactUsRoutes.js';
 
 const app = express();
 
 // app.use(cors());
 app.use(
   cors({
-    origin: ['http://localhost:5173','http://localhost:5174','http://localhost:5175', 'http://localhost:3000'],
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:3000',
+
+      // for employer
+      'http://qa.employer.rozgardwar.cloud',
+      'https://qa.employer.rozgardwar.cloud',
+
+      'http://employer.rozgardwar.cloud',
+      'https://employer.rozgardwar.cloud',
+
+      // for consultant
+      'http://qa.consultant.rozgardwar.cloud',
+      'https://qa.consultant.rozgardwar.cloud',
+
+      'http://consultant.rozgardwar.cloud',
+      'https://consultant.rozgardwar.cloud',
+
+      // for user
+      'http://rozgardwar.cloud',
+      'https://rozgardwar.cloud',
+
+      'http://qa.rozgardwar.cloud',
+      'https://qa.rozgardwar.cloud',
+    ],
     credentials: true,
   }),
 );
