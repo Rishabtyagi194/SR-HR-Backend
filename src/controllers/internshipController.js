@@ -102,12 +102,14 @@ export const getEmployerInternshipController = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const { jobs, total } = await internshipJobsServices.listDashboardInternships(page, limit, role, organisation_id, userId);
+    const { jobs, total, total_internship_response, internship_shortlisted_count } = await internshipJobsServices.listDashboardInternships(page, limit, role, organisation_id, userId);
 
     res.status(200).json({
       message: 'Internship fetched successfully',
       total,
-      jobs, // includes total_responses count for each job
+      total_internship_response,
+      internship_shortlisted_count,
+      jobs, 
     });
   } catch (error) {
     console.error('getEmployerInternshipController error:', error);

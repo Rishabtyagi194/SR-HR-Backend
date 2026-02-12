@@ -3,8 +3,8 @@ import { body } from 'express-validator';
 import * as userController from '../controllers/userController.js';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/fileUploadMiddleware.js';
-import passport from 'passport';
-import jwt from 'jsonwebtoken';
+// import passport from 'passport';
+// import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -28,32 +28,32 @@ router.post('/login', [body('email').isEmail(), body('password').notEmpty()], us
 
 /* ---------------------- login with google ------------------------------------*/ 
 
-router.get(
-  '/auth/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email'],
-  })
-);
+// router.get(
+//   '/auth/google',
+//   passport.authenticate('google', {
+//     scope: ['profile', 'email'],
+//   })
+// );
 
-router.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { session: false }),
-  (req, res) => {
-    const token = jwt.sign(
-      {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role || 'job_seeker',
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+// router.get(
+//   '/auth/google/callback',
+//   passport.authenticate('google', { session: false }),
+//   (req, res) => {
+//     const token = jwt.sign(
+//       {
+//         id: req.user.id,
+//         email: req.user.email,
+//         role: req.user.role || 'job_seeker',
+//       },
+//       process.env.JWT_SECRET,
+//       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+//     );
 
-    res.redirect(
-      `${process.env.CLIENT_URL}/auth/callback?token=${token}`
-    );
-  }
-);
+//     res.redirect(
+//       `${process.env.CLIENT_URL}/auth/callback?token=${token}`
+//     );
+//   }
+// );
 
 
 /* ---------------------------- PROFILE PROTECTED ROUTES --------------------------- */

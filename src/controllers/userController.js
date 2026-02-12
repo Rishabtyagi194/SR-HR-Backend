@@ -131,7 +131,7 @@ export const getpersonalProfileDetails = async (req, res) => {
   console.log("userId", userId);
 
   const user = await UserService.getpersonalProfileDetails(userId);
-  console.log("user", user);
+  // console.log("user", user);
   
   res.json({ success: true, data: user });
 };

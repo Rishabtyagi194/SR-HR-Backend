@@ -24,7 +24,7 @@ class JobsService {
     if (cached) return JSON.parse(cached);
 
     const data = await JobPostQueries.getDashboardJobs(page, limit, role, organisationId, userId);
-
+    
     await redis.set(cacheKey, JSON.stringify(data), 'EX', 180);
     return data;
   }
