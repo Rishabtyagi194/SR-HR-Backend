@@ -22,6 +22,7 @@ import saveJobsRoutes from './routes/savedJobRoutes.js';
 import LocationRoutes from './routes/locationRoutes.js';
 import consultantRoutes from './routes/consultantAuthRoutes.js';
 import contactUsRoutes from './routes/contactUsRoutes.js';
+import loginWithGoogleRoutes from './routes/loginWithGoogleRoutes.js'
 
 const app = express();
 
@@ -91,5 +92,7 @@ app.use('/api/location', LocationRoutes);
 
 app.use('/api/consultant', consultantRoutes);
 app.use('/api/contcat-us', contactUsRoutes);
+
+app.use('/api/google', loginWithGoogleRoutes);
 
 export default app;

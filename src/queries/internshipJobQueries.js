@@ -135,17 +135,17 @@ class internshipQueries {
     let params = [];
 
     if (role.endsWith('_admin')) {
-      where = 'organisation_id = ?';
+      where = 'ij.organisation_id = ?';
       params = [organisationId];
     } else {
-      where = 'organisation_id = ? AND (employer_id = ? OR staff_id = ?)';
+      where = 'ij.organisation_id = ? AND (ij.employer_id = ? OR ij.staff_id = ?)';
       params = [organisationId, userId, userId];
     }
 
-    const [rows] = await getReadPool().query(
+    const [jobs] = await getReadPool().query(
       `
     SELECT *
-    FROM InternshipJobs
+    FROM InternshipJobs ij
     WHERE ${where}
     ORDER BY created_at DESC
     LIMIT ? OFFSET ?
@@ -156,13 +156,31 @@ class internshipQueries {
     const [[{ total }]] = await getReadPool().execute(
       `
     SELECT COUNT(*) AS total
-    FROM InternshipJobs
+    FROM InternshipJobs ij
     WHERE ${where}
     `,
       params,
     );
 
-    return { jobs: rows, total };
+    const [[applicationStats]] = await getReadPool().execute(
+      `
+        SELECT 
+          COUNT(ja.id) AS total_response,
+          SUM(ja.application_status = 'shortlisted') AS shortlisted_count
+        FROM job_applications ja
+        INNER JOIN InternshipJobs ij 
+          ON ja.internship_job_id = ij.job_id
+        WHERE ${where}
+      `,
+      params
+    );
+
+    return {
+      jobs, 
+      total,
+      total_internship_response: applicationStats.total_response || 0,
+      internship_shortlisted_count: applicationStats.shortlisted_count || 0,
+    };
   }
 
   async getPublicInternships(page, limit, role) {

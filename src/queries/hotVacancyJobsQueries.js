@@ -272,22 +272,23 @@ class jobQueries {
   // }
 
   async getDashboardJobs(page, limit, role, organisationId, userId) {
+
     const offset = (page - 1) * limit;
     let where = '';
     let params = [];
 
     if (role.endsWith('_admin')) {
-      where = 'organisation_id = ?';
+      where = 'hj.organisation_id = ?';
       params = [organisationId];
     } else {
-      where = 'organisation_id = ? AND (employer_id = ? OR staff_id = ?)';
+      where = 'hj.organisation_id = ? AND (hj.employer_id = ? OR hj.staff_id = ?)';
       params = [organisationId, userId, userId];
     }
 
-    const [rows] = await getReadPool().query(
+    const [jobs] = await getReadPool().query(
       `
     SELECT *
-    FROM HotVacancyJobs
+    FROM HotVacancyJobs hj
     WHERE ${where}
     ORDER BY created_at DESC
     LIMIT ? OFFSET ? 
@@ -298,13 +299,32 @@ class jobQueries {
     const [[{ total }]] = await getReadPool().execute(
       `
     SELECT COUNT(*) AS total
-    FROM HotVacancyJobs
+    FROM HotVacancyJobs hj
     WHERE ${where}
     `,
       params,
     );
 
-    return { jobs: rows, total };
+    const [[applicationStats]] = await getReadPool().execute(
+      `
+        SELECT 
+          COUNT(ja.id) AS total_response,
+          SUM(ja.application_status = 'shortlisted') AS shortlisted_count
+        FROM job_applications ja
+        INNER JOIN HotVacancyJobs hj 
+          ON ja.hotvacancy_job_id = hj.job_id
+        WHERE ${where}
+      `,
+      params
+    );
+
+
+    return {
+      jobs,
+      total,
+      total_response: applicationStats.total_response || 0,
+      shortlisted_count: applicationStats.shortlisted_count || 0,
+    };
   }
 
   async getPublicJobs(page, limit, role) {
@@ -404,7 +424,7 @@ class jobQueries {
     job.shortlisted_user_applications = applications.filter((app) => app.application_status === 'shortlisted').length;
     job.shortlisted_consultant_applications = parsedConsultantApplications.filter((app) => app.application_status === 'shortlisted').length;
     job.total_shortlisted_applications = job.shortlisted_user_applications + job.shortlisted_consultant_applications;
-    
+
     return job;
   }
 

@@ -142,7 +142,7 @@ export const getEmployerJobsController = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const { jobs, total } =
+    const { jobs, total, total_response, shortlisted_count } =
       await hotVacancyJobsServices.listDashboardJobs(
         page,
         limit,
@@ -154,34 +154,13 @@ export const getEmployerJobsController = async (req, res) => {
     res.status(200).json({
       message: 'Jobs fetched successfully',
       total,
-      jobs,
+      total_response,
+      shortlisted_count,
+      jobs
     });
   } catch (error) {
     console.error('getEmployerJobsController error:', error);
     res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// list all jobs for user
-export const ListAllJobsController = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const role = req.user.role;
-
-    const { jobs, total } =
-      await hotVacancyJobsServices.listPublicJobs(page, limit, role);
-
-    return res.status(200).json({
-      message: 'Jobs fetched successfully',
-      totalJobs: total,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      jobs,
-    });
-  } catch (error) {
-    console.error('ListAllJobsController error:', error);
-    return res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -228,6 +207,31 @@ export const getSingleJobWithApplicationsController = async (req, res) => {
     });
   }
 };
+
+// list all jobs for user
+export const ListAllJobsController = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const role = req.user.role;
+
+    const { jobs, total } =
+      await hotVacancyJobsServices.listPublicJobs(page, limit, role);
+
+    return res.status(200).json({
+      message: 'Jobs fetched successfully',
+      totalJobs: total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      jobs,
+    });
+  } catch (error) {
+    console.error('ListAllJobsController error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 
 export const getJobsByIdController = async (req, res) => {
   try {
