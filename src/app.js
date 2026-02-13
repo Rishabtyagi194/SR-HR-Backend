@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import passport from 'passport';
-import './config/passport.js';
 
 // Import routes
 import adminRoutes from './routes/superAdminRoutes.js';
@@ -10,8 +9,6 @@ import adminRoutes from './routes/superAdminRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
-import hotVacancyJobsRoutes from './routes/hotVacancyJobsRoutes.js';
-import internshipJobsRoutes from './routes/internshipJobsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import uploadExcel from './routes/uploadExcelRoutes.js';
 import jobApplication from './routes/jobApplicationRoutes.js';
@@ -20,8 +17,8 @@ import uploadResume from './routes/resumeRoutes.js';
 import searchRoutes from './routes/searchFilterRoutes.js';
 import saveJobsRoutes from './routes/savedJobRoutes.js';
 import LocationRoutes from './routes/locationRoutes.js';
-import consultantRoutes from './routes/consultantAuthRoutes.js';
 import contactUsRoutes from './routes/contactUsRoutes.js';
+import loginWithGoogleRoutes from './routes/loginWithGoogleRoutes.js'
 
 const app = express();
 
@@ -76,9 +73,7 @@ app.use('/api/organization', organizationRoutes);
 
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/jobs/applications', jobApplication);
-app.use('/api/jobs', hotVacancyJobsRoutes);
 
-app.use('/api/internship', internshipJobsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/resume', uploadResume);
 
@@ -89,7 +84,8 @@ app.use('/api/search', searchRoutes);
 app.use('/api/savejob', saveJobsRoutes);
 app.use('/api/location', LocationRoutes);
 
-app.use('/api/consultant', consultantRoutes);
 app.use('/api/contcat-us', contactUsRoutes);
+
+app.use('/api/google', loginWithGoogleRoutes);
 
 export default app;

@@ -9,7 +9,6 @@ import {
 } from '../controllers/jobApplicationController.js';
 import { Authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/fileUploadMiddleware.js';
-import { getAllApplicationsUploadedByConsultant, getJobByJobIdAndOrgIdController, getMyUploadedJobsController } from '../controllers/consultantApplicationController.js';
 
 const router = express.Router();
 
@@ -39,20 +38,7 @@ router.post('/:category/:jobId/consultant/submit-resume', Authenticate,
   upload.array('resumes', 10),
   uploadResumeOnJobController);
 
-// Employer views all jobs on which consultant uploaded resume 
-router.get('/consultant/all/submitted-resume', Authenticate, authorizeRoles('employer_admin', 'employer_staff'), getAllApplicationsUploadedByConsultant);
 
-// List all applied application by current consultant
-router.get('/consultant/uploaded-resume/on-jobs',Authenticate,
-  authorizeRoles('consultant_admin', 'consultant_staff'),
-  getMyUploadedJobsController
-);
-
-// get job by ob id and org id 
-router.get('/consultant/:employer_org_id/:job_ref_id',Authenticate,
-  authorizeRoles('consultant_admin', 'consultant_staff'),
-  getJobByJobIdAndOrgIdController
-);
 
 
 
