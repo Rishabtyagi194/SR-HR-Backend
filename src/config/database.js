@@ -159,15 +159,12 @@ export const initializeDatabase = async () => {
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS employer_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        
         organisation_id INT NOT NULL,
         employer_id INT,
-
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NULL,
+        password VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
-
         role ENUM(
             'employer_admin',
             'employer_staff',
@@ -176,16 +173,11 @@ export const initializeDatabase = async () => {
           ) NOT NULL,        
         
         permissions JSON,
-
-        auth_provider ENUM('local','google') DEFAULT 'local',
-        provider_id VARCHAR(255) NULL,
-        
         is_active BOOLEAN DEFAULT FALSE,
         is_email_verified BOOLEAN DEFAULT FALSE,
         
         email_otp VARCHAR(10),
         otp_expires_at DATETIME,
-
         
         last_login TIMESTAMP NULL,
         login_history JSON,
@@ -196,10 +188,7 @@ export const initializeDatabase = async () => {
         FOREIGN KEY (organisation_id) REFERENCES organisations(id) ON DELETE CASCADE,
         INDEX idx_email (email),
         INDEX idx_phone (phone),
-        INDEX idx_org_role (organisation_id, role),
-        
-        -- Prevent duplicate Google accounts
-        UNIQUE KEY uniq_provider (auth_provider, provider_id)
+        INDEX idx_org_role (organisation_id, role)
 
       )
     `);
@@ -355,7 +344,7 @@ export const initializeDatabase = async () => {
 
         full_name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NULL,
+        password VARCHAR(255) NOT NULL,
         auth_provider ENUM('local', 'google') DEFAULT 'local',
         google_id VARCHAR(255) UNIQUE NULL,
         phone VARCHAR(20) UNIQUE,
