@@ -4,16 +4,12 @@ import morgan from 'morgan';
 import passport from 'passport';
 
 // Import routes
-import adminRoutes from './routes/superAdminRoutes.js';
-// import authRoutes from './routes/authRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
-import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import uploadExcel from './routes/uploadExcelRoutes.js';
 import jobApplication from './routes/jobApplicationRoutes.js';
 import otpRoutes from './routes/otpVerificationRoutes.js';
-import uploadResume from './routes/resumeRoutes.js';
 import searchRoutes from './routes/searchFilterRoutes.js';
 import saveJobsRoutes from './routes/savedJobRoutes.js';
 import LocationRoutes from './routes/locationRoutes.js';
@@ -67,15 +63,12 @@ app.get('/', (req, res) => {
 app.use(passport.initialize());
 
 // Routes
-app.use('/api/admin', adminRoutes);
 app.use('/api/employer', employerRoutes);
 app.use('/api/organization', organizationRoutes);
 
-app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/jobs/applications', jobApplication);
 
 app.use('/api/users', userRoutes);
-app.use('/api/resume', uploadResume);
 
 app.use('/otp', otpRoutes);
 app.use('/api/excel', uploadExcel);
